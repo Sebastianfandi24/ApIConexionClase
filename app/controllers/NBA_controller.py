@@ -1,10 +1,10 @@
 
 from flask import Blueprint, request, jsonify
-from services.band_service import BandService
+from app.services.NBA_service import BandService
 band_bp =Blueprint('band_bp',__name__)
 
 # Importar la sesión de la base de datos desde config/database.py
-from config.database import get_db_session
+from app.config.NBA_database import get_db_session
 
 # Instancia global de servicio (en producción usar contexto de app o request)
 service = BandService(get_db_session())

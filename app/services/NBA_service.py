@@ -1,5 +1,5 @@
-from repositories.band_repository import BandRepository
-from models.band_model import Band
+from app.repositories.NBA_repository import BandRepository
+from app.models.NBA_model import Band
 from sqlalchemy.orm import Session
 
 """

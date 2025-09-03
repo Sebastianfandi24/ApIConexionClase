@@ -1,5 +1,5 @@
 from flask import Flask
-from controllers.band_controller import band_bp
+from controllers.controller import band_bp
 
 app = Flask(__name__)
 

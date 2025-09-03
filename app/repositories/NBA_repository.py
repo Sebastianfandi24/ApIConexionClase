@@ -1,4 +1,4 @@
-from models.band_model import Band, Album
+from app.models.NBA_model import Band, Album
 from sqlalchemy.orm import Session
 
 class BandRepository:
