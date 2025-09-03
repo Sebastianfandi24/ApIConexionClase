@@ -8,7 +8,7 @@
 #   - declarative_base: se usa para crear una clase base de la cual heredan los modelos ORM.
 
 from datetime import datetime
-from sqlalchemy import Column, String, Float, Date, DateTime
+from sqlalchemy import Column, String, Float, Date, DateTime, Integer
 from sqlalchemy.orm import declarative_base
 
 # Base declarativa para que todos los modelos hereden de aquí.
@@ -29,11 +29,15 @@ Este modelo está mapeado a la tabla 'players' en la base de datos y se diseñó
 class Player(Base):
     __tablename__ = "players"
 
-    # Identificador único del jugador (alfanumérico).
-    id = Column(String(50), primary_key=True, index=True, nullable=False)
+    # Identificador único del jugador (numérico).
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
+
 
     # Nombre completo del jugador.
     name = Column(String(255), nullable=False)
+
+    # Equipo del jugador.
+    team = Column(String(255), nullable=False)
 
     # Posición en la cancha (ej: Guard, Forward, Center).
     position = Column(String(50), nullable=False)

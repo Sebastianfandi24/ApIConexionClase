@@ -49,7 +49,7 @@ def get_engine():
                 max_overflow=10,
                 pool_timeout=30,
                 pool_recycle=1800,
-                echo=True  # Cambiar a True para depuración
+                echo=False  # Cambiar a True para depuración
             )
             # Probar conexión
             with engine.connect():

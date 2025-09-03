@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 import re
+from datetime import date
 
 from app.config.NBA_database import get_db
 from app.services.NBA_service import (
@@ -10,7 +11,7 @@ from app.services.NBA_service import (
     actualizar_jugador,
     eliminar_jugador
 )
-from app.schemas.NBA_schema import PlayerCreate, PlayerUpdate, PlayerResponse
+from app.Schema.NBA_Schema import PlayerCreate, PlayerUpdate, PlayerResponse
 from pydantic import BaseModel
 
 
@@ -57,11 +58,10 @@ def get_players(
 # GET /players/{player_id} → Obtener jugador por ID
 # -------------------------------
 @router.get("/{player_id}", response_model=PlayerResponse)
-def get_player(player_id: str, db: Session = Depends(get_db)):
+def get_player(player_id: int, db: Session = Depends(get_db)):
     """
     Retorna un jugador específico por su ID alfanumérico.
     """
-    validar_id(player_id)
     player = obtener_jugador(db, player_id)
     if not player:
         raise HTTPException(
@@ -77,28 +77,27 @@ def get_player(player_id: str, db: Session = Depends(get_db)):
 @router.post("/", response_model=PlayerResponse, status_code=201)
 def post_player(player: PlayerCreate, db: Session = Depends(get_db)):
     """
-    Crea un nuevo jugador en el sistema.
+    Crea un nuevo jugador en el sistema. El id se autogenera en la base de datos.
     """
-    # Verificar duplicados por ID antes de crear
-    existing = obtener_jugador(db, player.id)
-    if existing:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Ya existe un jugador con id {player.id}"
-        )
-
-    return crear_jugador(db, player)
+    # Convertir birth_date a date si viene como datetime
+    player_dict = player.dict()
+    if "birth_date" in player_dict and hasattr(player_dict["birth_date"], "date"):
+        player_dict["birth_date"] = player_dict["birth_date"].date()
+    # Crear jugador sin id, la base de datos lo asigna automáticamente
+    class PlayerCreateDB(PlayerCreate):
+        pass
+    player_db = PlayerCreateDB(**player_dict)
+    return crear_jugador(db, player_db)
 
 
 # -------------------------------
 # PUT /players/{player_id} → Actualizar jugador
 # -------------------------------
 @router.put("/{player_id}", response_model=PlayerResponse)
-def put_player(player_id: str, player: PlayerUpdate, db: Session = Depends(get_db)):
+def put_player(player_id: int, player: PlayerUpdate, db: Session = Depends(get_db)):
     """
     Actualiza los datos de un jugador existente.
     """
-    validar_id(player_id)
     db_player = obtener_jugador(db, player_id)
     if not db_player:
         raise HTTPException(
@@ -112,11 +111,10 @@ def put_player(player_id: str, player: PlayerUpdate, db: Session = Depends(get_d
 # DELETE /players/{player_id} → Eliminar jugador
 # -------------------------------
 @router.delete("/{player_id}", response_model=MessageResponse)
-def delete_player(player_id: str, db: Session = Depends(get_db)):
+def delete_player(player_id: int, db: Session = Depends(get_db)):
     """
     Elimina un jugador por su ID.
     """
-    validar_id(player_id)
     db_player = obtener_jugador(db, player_id)
     if not db_player:
         raise HTTPException(

@@ -17,8 +17,8 @@ class PlayerRepository:
         """Retorna todos los jugadores con paginación"""
         return self.db.query(Player).offset(skip).limit(limit).all()
 
-    def get_player_by_id(self, player_id: str) -> Optional[Player]:
-        """Busca un jugador por su ID alfanumérico"""
+    def get_player_by_id(self, player_id: int) -> Optional[Player]:
+        """Busca un jugador por su ID numérico"""
         return self.db.query(Player).filter(Player.id == player_id).first()
 
     def create_player(self, player: Player) -> Player:

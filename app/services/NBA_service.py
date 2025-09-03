@@ -31,14 +31,14 @@ class PlayerService:
         """
         return self.repository.get_all_players(skip=skip, limit=limit)
 
-    def obtener_jugador(self, player_id: str):
+    def obtener_jugador(self, player_id: int):
         """
         Busca y retorna un jugador específico por su ID alfanumérico.
         Retorna None si no se encuentra.
         """
         return self.repository.get_player_by_id(player_id)
 
-    def crear_jugador(self, id: str, name: str, position: str, height_m: float, weight_kg: float, birth_date: date):
+    def crear_jugador(self, name: str, team: str, position: str, height_m: float, weight_kg: float, birth_date: date):
         """
         Crea un nuevo jugador de la NBA con validaciones de negocio:
         - ID único.
@@ -47,22 +47,27 @@ class PlayerService:
         - Fecha de nacimiento no futura.
         """
         # Validaciones de negocio
-        if self.repository.get_player_by_id(id):
-            raise ValueError(f"Ya existe un jugador con ID {id}")
-
         if not name or name.strip() == "":
             raise ValueError("El nombre del jugador no puede estar vacío")
+
+        if not team or team.strip() == "":
+            raise ValueError("El equipo no puede estar vacío")
 
         if height_m <= 0 or weight_kg <= 0:
             raise ValueError("La altura y el peso deben ser mayores a 0")
 
-        if birth_date > date.today():
+        # Convertir birth_date a date si es datetime
+        if hasattr(birth_date, 'date'):
+            birth_date_date = birth_date.date()
+        else:
+            birth_date_date = birth_date
+        if birth_date_date > date.today():
             raise ValueError("La fecha de nacimiento no puede estar en el futuro")
 
         # Crear jugador
         new_player = Player(
-            id=id,
             name=name,
+            team=team,
             position=position,
             height_m=height_m,
             weight_kg=weight_kg,
@@ -71,7 +76,7 @@ class PlayerService:
 
         return self.repository.create_player(new_player)
 
-    def actualizar_jugador(self, player_id: str, **kwargs):
+    def actualizar_jugador(self, player_id: int, **kwargs):
         """
         Actualiza los datos de un jugador existente.
         Aplica validaciones de negocio según los campos recibidos.
@@ -82,13 +87,12 @@ class PlayerService:
 
         if "name" in kwargs and not kwargs["name"].strip():
             raise ValueError("El nombre del jugador no puede estar vacío")
-
+        if "team" in kwargs and not kwargs["team"].strip():
+            raise ValueError("El equipo no puede estar vacío")
         if "height_m" in kwargs and kwargs["height_m"] <= 0:
             raise ValueError("La altura debe ser mayor a 0")
-
         if "weight_kg" in kwargs and kwargs["weight_kg"] <= 0:
             raise ValueError("El peso debe ser mayor a 0")
-
         if "birth_date" in kwargs and kwargs["birth_date"] > date.today():
             raise ValueError("La fecha de nacimiento no puede estar en el futuro")
 
@@ -113,28 +117,29 @@ class PlayerService:
 def listar_jugadores(db, skip=0, limit=100):
     return PlayerService(db).listar_jugadores(skip, limit)
 
-def obtener_jugador(db, player_id):
+def obtener_jugador(db, player_id: int):
     return PlayerService(db).obtener_jugador(player_id)
 
 def crear_jugador(db, player):
     return PlayerService(db).crear_jugador(
-        id=player.id,
         name=player.name,
+        team=player.team,
         position=player.position,
         height_m=player.height_m,
         weight_kg=player.weight_kg,
         birth_date=player.birth_date
     )
 
-def actualizar_jugador(db, player_id, player):
+def actualizar_jugador(db, player_id: int, player):
     return PlayerService(db).actualizar_jugador(
         player_id,
         name=player.name,
+        team=player.team,
         position=player.position,
         height_m=player.height_m,
         weight_kg=player.weight_kg,
         birth_date=player.birth_date
     )
 
-def eliminar_jugador(db, player_id):
+def eliminar_jugador(db, player_id: int):
     return PlayerService(db).eliminar_jugador(player_id)

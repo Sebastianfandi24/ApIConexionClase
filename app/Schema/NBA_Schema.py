@@ -5,13 +5,17 @@ class PlayerBase(BaseModel):
     name: str
     team: str
     position: str
-    number: int
+    
 
 class PlayerCreate(PlayerBase):
-    pass
+    height_m: float
+    weight_kg: float
+    birth_date: datetime
 
 class PlayerUpdate(PlayerBase):
-    pass
+    height_m: float
+    weight_kg: float
+    birth_date: datetime
 
 class PlayerResponse(PlayerBase):
     id: int
