@@ -93,8 +93,13 @@ class PlayerService:
             raise ValueError("La altura debe ser mayor a 0")
         if "weight_kg" in kwargs and kwargs["weight_kg"] <= 0:
             raise ValueError("El peso debe ser mayor a 0")
-        if "birth_date" in kwargs and kwargs["birth_date"] > date.today():
-            raise ValueError("La fecha de nacimiento no puede estar en el futuro")
+            if "birth_date" in kwargs:
+                birth_date = kwargs["birth_date"]
+                if hasattr(birth_date, "date"):
+                    birth_date = birth_date.date()
+                if birth_date > date.today():
+                    raise ValueError("La fecha de nacimiento no puede estar en el futuro")
+                kwargs["birth_date"] = birth_date
 
         # Aplicar cambios
         for key, value in kwargs.items():
