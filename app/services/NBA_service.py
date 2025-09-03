@@ -1,62 +1,110 @@
-from app.repositories.NBA_repository import BandRepository
-from app.models.NBA_model import Band
+from datetime import date
 from sqlalchemy.orm import Session
+from app.repositories.NBA_repository import PlayerRepository
+from app.models.NBA_model import Player
+
 
 """
 Librerías utilizadas:
-- repositories.band_repository: Proporciona la clase BandRepository para la gestión de bandas en la base de datos.
-- models.band_model: Define el modelo Band que representa la entidad de banda musical.
+- repositories.NBA_repository: Proporciona la clase PlayerRepository para la gestión de jugadores en la base de datos.
+- models.NBA_model: Define el modelo Player que representa a un jugador de la NBA.
 - sqlalchemy.orm.Session: Permite manejar la sesión de la base de datos para realizar operaciones transaccionales.
 """
 
-class BandService:
+
+class PlayerService:
     """
-    Capa de servicios para la gestión de bandas musicales.
-    Esta clase orquesta la lógica de negocio relacionada con las bandas, utilizando el repositorio para acceder a los datos.
-    Permite mantener la lógica de negocio separada de la capa de acceso a datos y de la base de datos.
+    Capa de servicios para la gestión de jugadores NBA.
+    Contiene la lógica de negocio y validaciones, delegando las operaciones de persistencia al repositorio.
     """
+
     def __init__(self, db_session: Session):
         """
-        Inicializa el servicio de bandas con una sesión de base de datos y un repositorio de bandas.
+        Inicializa el servicio de jugadores con una sesión de base de datos y un repositorio de jugadores.
         """
-        self.repository = BandRepository(db_session)
+        self.repository = PlayerRepository(db_session)
 
-    def listar_bandas(self):
+    def listar_jugadores(self, skip: int = 0, limit: int = 100):
         """
-        Recupera y retorna todas las bandas musicales registradas en el sistema.
-        Utiliza el repositorio para obtener la lista completa de bandas.
-        Es útil para mostrar catálogos o listados generales de bandas.
+        Recupera y retorna todos los jugadores con soporte para paginación.
+        Útil para catálogos, listados o vistas generales.
         """
-        return self.repository.get_all_bands()
+        return self.repository.get_all_players(skip=skip, limit=limit)
 
-    def obtener_banda(self, band_id: int):
+    def obtener_jugador(self, player_id: str):
         """
-        Busca y retorna una banda específica por su identificador único (ID).
-        Utiliza el repositorio para acceder a la banda correspondiente.
-        Es útil para mostrar detalles o realizar operaciones sobre una banda concreta.
+        Busca y retorna un jugador específico por su ID alfanumérico.
+        Retorna None si no se encuentra.
         """
-        return self.repository.get_band_by_id(band_id)
+        return self.repository.get_player_by_id(player_id)
 
-    def crear_banda(self, name: str):
+    def crear_jugador(self, id: str, name: str, position: str, height_m: float, weight_kg: float, birth_date: date):
         """
-        Crea una nueva banda musical con el nombre proporcionado.
-        Utiliza el repositorio para almacenar la nueva banda en la base de datos.
-        Es útil para registrar nuevas bandas en el sistema.
+        Crea un nuevo jugador de la NBA con validaciones de negocio:
+        - ID único.
+        - Nombre no vacío.
+        - Altura y peso válidos (>0).
+        - Fecha de nacimiento no futura.
         """
-        return self.repository.create_band(name)
+        # Validaciones de negocio
+        if self.repository.get_player_by_id(id):
+            raise ValueError(f"Ya existe un jugador con ID {id}")
 
-    def actualizar_banda(self, band_id: int, name: str = None):
-        """
-        Actualiza la información de una banda existente, permitiendo modificar su nombre.
-        Utiliza el repositorio para realizar la actualización en la base de datos.
-        Es útil para mantener actualizada la información de las bandas.
-        """
-        return self.repository.update_band(band_id, name)
+        if not name or name.strip() == "":
+            raise ValueError("El nombre del jugador no puede estar vacío")
 
-    def eliminar_banda(self, band_id: int):
+        if height_m <= 0 or weight_kg <= 0:
+            raise ValueError("La altura y el peso deben ser mayores a 0")
+
+        if birth_date > date.today():
+            raise ValueError("La fecha de nacimiento no puede estar en el futuro")
+
+        # Crear jugador
+        new_player = Player(
+            id=id,
+            name=name,
+            position=position,
+            height_m=height_m,
+            weight_kg=weight_kg,
+            birth_date=birth_date
+        )
+
+        return self.repository.create_player(new_player)
+
+    def actualizar_jugador(self, player_id: str, **kwargs):
         """
-        Elimina una banda musical del sistema según su identificador único (ID).
-        Utiliza el repositorio para eliminar la banda de la base de datos.
-        Es útil para operaciones administrativas o de mantenimiento.
+        Actualiza los datos de un jugador existente.
+        Aplica validaciones de negocio según los campos recibidos.
         """
-        return self.repository.delete_band(band_id)
+        player = self.repository.get_player_by_id(player_id)
+        if not player:
+            raise ValueError(f"No se encontró un jugador con ID {player_id}")
+
+        if "name" in kwargs and not kwargs["name"].strip():
+            raise ValueError("El nombre del jugador no puede estar vacío")
+
+        if "height_m" in kwargs and kwargs["height_m"] <= 0:
+            raise ValueError("La altura debe ser mayor a 0")
+
+        if "weight_kg" in kwargs and kwargs["weight_kg"] <= 0:
+            raise ValueError("El peso debe ser mayor a 0")
+
+        if "birth_date" in kwargs and kwargs["birth_date"] > date.today():
+            raise ValueError("La fecha de nacimiento no puede estar en el futuro")
+
+        # Aplicar cambios
+        for key, value in kwargs.items():
+            setattr(player, key, value)
+
+        return self.repository.update_player(player)
+
+    def eliminar_jugador(self, player_id: str):
+        """
+        Elimina un jugador existente según su ID.
+        Lanza un error si no se encuentra.
+        """
+        player = self.repository.get_player_by_id(player_id)
+        if not player:
+            raise ValueError(f"No se encontró un jugador con ID {player_id}")
+
+        return self.repository.delete_player(player)

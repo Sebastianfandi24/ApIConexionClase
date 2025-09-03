@@ -1,94 +1,128 @@
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+import re
 
-from flask import Blueprint, request, jsonify
-from app.services.NBA_service import BandService
-band_bp =Blueprint('band_bp',__name__)
-
-# Importar la sesión de la base de datos desde config/database.py
-from app.config.NBA_database import get_db_session
-
-# Instancia global de servicio (en producción usar contexto de app o request)
-service = BandService(get_db_session())
-
-band_bp =Blueprint('band_bp',__name__)
-
-
-@band_bp.route('/bands', methods=['GET'])
-def get_bands():
-	"""
-	GET /bands
-	Recupera y retorna todas las bandas musicales registradas en el sistema.
-	Utiliza la capa de servicios para obtener la lista completa de bandas.
-	No recibe parámetros.
-	Respuesta: JSON con la lista de bandas.
-	"""
-	bands = service.listar_bandas()
-	return jsonify([{'id': b.id, 'name': b.name} for b in bands]), 200
+from app.config.NBA_database import get_db
+from app.services.NBA_service import (
+    listar_jugadores,
+    obtener_jugador,
+    crear_jugador,
+    actualizar_jugador,
+    eliminar_jugador
+)
+from app.schemas.NBA_schema import PlayerCreate, PlayerUpdate, PlayerResponse
+from pydantic import BaseModel
 
 
-
-@band_bp.route('/bands/<int:band_id>', methods=['GET'])
-def get_band(band_id):
-	"""
-	GET /bands/<band_id>
-	Recupera la información de una banda específica por su ID.
-	Parámetros:
-		band_id (int): ID de la banda a consultar (en la URL).
-	Respuesta: JSON con los datos de la banda o 404 si no existe.
-	"""
-	band = service.obtener_banda(band_id)
-	if band:
-		return jsonify({'id': band.id, 'name': band.name}), 200
-	return jsonify({'error': 'Banda no encontrada'}), 404
+# -------------------------------
+# Modelo de respuesta genérica
+# -------------------------------
+class MessageResponse(BaseModel):
+    message: str
 
 
-
-@band_bp.route('/bands', methods=['POST'])
-def create_band():
-	"""
-	POST /bands
-	Crea una nueva banda musical.
-	Parámetros esperados (JSON):
-		name (str): Nombre de la banda.
-	Respuesta: JSON con los datos de la banda creada.
-	"""
-	data = request.get_json()
-	name = data.get('name')
-	if not name:
-		return jsonify({'error': 'El nombre es obligatorio'}), 400
-	band = service.crear_banda(name)
-	return jsonify({'id': band.id, 'name': band.name}), 201
+router = APIRouter(
+    prefix="/players",
+    tags=["NBA Players"]
+)
 
 
-
-@band_bp.route('/bands/<int:band_id>', methods=['PUT'])
-def update_band(band_id):
-	"""
-	PUT /bands/<band_id>
-	Actualiza la información de una banda existente.
-	Parámetros:
-		band_id (int): ID de la banda a actualizar (en la URL).
-		name (str): Nuevo nombre de la banda (en el cuerpo JSON).
-	Respuesta: JSON con los datos de la banda actualizada o error si no existe.
-	"""
-	data = request.get_json()
-	name = data.get('name')
-	band = service.actualizar_banda(band_id, name)
-	if band:
-		return jsonify({'id': band.id, 'name': band.name}), 200
-	return jsonify({'error': 'Banda no encontrada'}), 404
+# -------------------------------
+# Helper → Validación de player_id
+# -------------------------------
+def validar_id(player_id: str):
+    if not re.match(r"^[a-zA-Z0-9_-]+$", player_id):
+        raise HTTPException(
+            status_code=400,
+            detail="El ID del jugador solo puede contener letras, números, guiones y guiones bajos."
+        )
 
 
+# -------------------------------
+# GET /players → Listar jugadores
+# -------------------------------
+@router.get("/", response_model=list[PlayerResponse])
+def get_players(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """
+    Retorna todos los jugadores registrados con paginación.
+    """
+    return listar_jugadores(db, skip, limit)
 
-@band_bp.route('/bands/<int:band_id>', methods=['DELETE'])
-def delete_band(band_id):
-	"""
-	DELETE /bands/<band_id>
-	Elimina una banda específica por su ID.
-	Parámetros:
-		band_id (int): ID de la banda a eliminar (en la URL).
-	Respuesta: JSON con mensaje de éxito o error si no existe.
-	"""
-	band = service.eliminar_banda(band_id)
-	if band:
-		return jsonify({'message': 'Banda eliminada'}), 200
-	return jsonify({'error': 'Banda no encontrada'}), 404
+
+# -------------------------------
+# GET /players/{player_id} → Obtener jugador por ID
+# -------------------------------
+@router.get("/{player_id}", response_model=PlayerResponse)
+def get_player(player_id: str, db: Session = Depends(get_db)):
+    """
+    Retorna un jugador específico por su ID alfanumérico.
+    """
+    validar_id(player_id)
+    player = obtener_jugador(db, player_id)
+    if not player:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Jugador con id {player_id} no encontrado"
+        )
+    return player
+
+
+# -------------------------------
+# POST /players → Crear nuevo jugador
+# -------------------------------
+@router.post("/", response_model=PlayerResponse, status_code=201)
+def post_player(player: PlayerCreate, db: Session = Depends(get_db)):
+    """
+    Crea un nuevo jugador en el sistema.
+    """
+    # Verificar duplicados por ID antes de crear
+    existing = obtener_jugador(db, player.id)
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Ya existe un jugador con id {player.id}"
+        )
+
+    return crear_jugador(db, player)
+
+
+# -------------------------------
+# PUT /players/{player_id} → Actualizar jugador
+# -------------------------------
+@router.put("/{player_id}", response_model=PlayerResponse)
+def put_player(player_id: str, player: PlayerUpdate, db: Session = Depends(get_db)):
+    """
+    Actualiza los datos de un jugador existente.
+    """
+    validar_id(player_id)
+    db_player = obtener_jugador(db, player_id)
+    if not db_player:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Jugador con id {player_id} no encontrado"
+        )
+    return actualizar_jugador(db, player_id, player)
+
+
+# -------------------------------
+# DELETE /players/{player_id} → Eliminar jugador
+# -------------------------------
+@router.delete("/{player_id}", response_model=MessageResponse)
+def delete_player(player_id: str, db: Session = Depends(get_db)):
+    """
+    Elimina un jugador por su ID.
+    """
+    validar_id(player_id)
+    db_player = obtener_jugador(db, player_id)
+    if not db_player:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Jugador con id {player_id} no encontrado"
+        )
+
+    eliminar_jugador(db, player_id)
+    return {"message": "Jugador eliminado correctamente"}
