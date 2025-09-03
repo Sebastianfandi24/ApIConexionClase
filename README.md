@@ -59,3 +59,37 @@ Si deseas contribuir, por favor sigue las buenas prácticas de documentación y 
 
 ## Licencia
 Este proyecto es de uso libre para fines educativos y de aprendizaje.
+
+##### Patrón arquitectónico:
+
+/Proyecto
+│
+├── main.py                # Punto de entrada de la aplicación Flask
+├── .env                   # Variables de entorno (credenciales DB)
+├── requirements.txt       # Dependencias del proyecto
+├── README.md              # Documentación general
+│
+└── app/
+    ├── config/            # Configuración de la base de datos y entorno
+    │   ├── __init__.py
+    │   └── NBA_database.py
+    │
+    ├── controllers/       # Controladores (endpoints de la API)
+    │   ├── __init__.py
+    │   ├── CONTROLLER.md
+    │   └── NBA_controller.py
+    │
+    ├── models/            # Modelos de datos (ORM SQLAlchemy)
+    │   ├── __init__.py
+    │   ├── MODELS.md
+    │   └── NBA_model.py
+    │
+    ├── repositories/      # Acceso a datos (CRUD sobre modelos)
+    │   ├── __init__.py
+    │   ├── NBA_repository.py
+    │   └── REPOSITORY.md
+    │
+    └── services/          # Lógica de negocio (servicios)
+        ├── __init__.py
+        ├── NBA_service.py
+        └── SERVICES.md
