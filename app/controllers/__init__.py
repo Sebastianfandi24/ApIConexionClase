@@ -1,1 +1,3 @@
 # Módulo de controladores
+
+# ...puede estar vacío...

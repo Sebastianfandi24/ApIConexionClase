@@ -108,3 +108,33 @@ class PlayerService:
             raise ValueError(f"No se encontró un jugador con ID {player_id}")
 
         return self.repository.delete_player(player)
+
+# Funciones globales para exponer los métodos de PlayerService
+def listar_jugadores(db, skip=0, limit=100):
+    return PlayerService(db).listar_jugadores(skip, limit)
+
+def obtener_jugador(db, player_id):
+    return PlayerService(db).obtener_jugador(player_id)
+
+def crear_jugador(db, player):
+    return PlayerService(db).crear_jugador(
+        id=player.id,
+        name=player.name,
+        position=player.position,
+        height_m=player.height_m,
+        weight_kg=player.weight_kg,
+        birth_date=player.birth_date
+    )
+
+def actualizar_jugador(db, player_id, player):
+    return PlayerService(db).actualizar_jugador(
+        player_id,
+        name=player.name,
+        position=player.position,
+        height_m=player.height_m,
+        weight_kg=player.weight_kg,
+        birth_date=player.birth_date
+    )
+
+def eliminar_jugador(db, player_id):
+    return PlayerService(db).eliminar_jugador(player_id)

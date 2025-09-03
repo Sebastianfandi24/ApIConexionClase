@@ -1,3 +1,1 @@
 # Módulo de configuración
-
-# ...puede estar vacío...

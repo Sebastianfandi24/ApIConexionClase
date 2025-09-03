@@ -2,8 +2,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.NBA_model import Base
-from app.config.database import engine, test_connection
-from app.controllers.player_controller import router as player_router
+from app.config.NBA_database import engine
+from app.controllers.NBA_controller import router
 import logging
 
 # Configuración de logging
@@ -15,11 +15,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("🚀 Iniciando aplicación...")
 
-    # Verificar conexión a la base de datos
-    if test_connection():
-        logger.info("✅ Base de datos conectada correctamente")
-    else:
-        logger.error("❌ Error al conectar con la base de datos")
+    # La conexión se verifica automáticamente al crear el engine
 
     # Crear tablas si no existen
     try:
@@ -51,7 +47,7 @@ app.add_middleware(
 )
 
 # Incluir routers
-app.include_router(player_router, prefix="/players", tags=["Players"])
+app.include_router(router, prefix="/players", tags=["Players"])
 
 @app.get("/")
 async def root():
@@ -60,7 +56,12 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Endpoint para verificar el estado de la aplicación y base de datos"""
-    db_status = test_connection()
+    try:
+        # Intentar conectar usando el engine
+        with engine.connect():
+            db_status = True
+    except Exception:
+        db_status = False
     return {
         "status": "healthy" if db_status else "unhealthy",
         "database": "connected" if db_status else "disconnected"

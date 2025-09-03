@@ -1,1 +1,3 @@
 # Módulo de modelos
+
+# ...puede estar vacío...
