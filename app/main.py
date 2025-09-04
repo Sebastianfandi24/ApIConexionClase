@@ -4,6 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.models.NBA_model import Base
 from app.config.NBA_database import engine
 from app.controllers.NBA_controller import router
+from app.config.documentation import (
+    TAGS_METADATA, 
+    CONTACT_INFO, 
+    LICENSE_INFO, 
+    SERVERS
+)
+from scalar_fastapi import get_scalar_api_reference
 import logging
 
 # Configuración de logging
@@ -31,10 +38,56 @@ async def lifespan(app: FastAPI):
 
 # Configuración de la aplicación FastAPI
 app = FastAPI(
-    title="NBA Players API",
-    description="API para consultar y administrar información de jugadores de la NBA",
-    version="1.0.0",
-    lifespan=lifespan
+    title="🏀 NBA Players API",
+    description="""
+    ## 🏀 API para gestión de jugadores de la NBA
+    
+    Esta API permite gestionar información completa de jugadores de la NBA, 
+    incluyendo operaciones CRUD (Crear, Leer, Actualizar, Eliminar) con validaciones 
+    robustas y documentación interactiva.
+    
+    ### 🚀 Características principales:
+    
+    * **CRUD completo**: Operaciones completas para jugadores
+    * **Validaciones automáticas**: Rangos de altura, peso y formatos de fecha
+    * **Paginación**: Lista de jugadores con control de límites
+    * **Documentación interactiva**: Swagger UI, ReDoc y Scalar
+    * **Base de datos PostgreSQL**: Almacenamiento persistente y confiable
+    * **Arquitectura en capas**: Separación clara de responsabilidades
+    
+    ### 📊 Endpoints disponibles:
+    
+    * `GET /api/v1/players/` - Lista todos los jugadores (con paginación)
+    * `GET /api/v1/players/{id}` - Obtiene un jugador específico
+    * `POST /api/v1/players/` - Crea un nuevo jugador
+    * `PUT /api/v1/players/{id}` - Actualiza un jugador existente
+    * `DELETE /api/v1/players/{id}` - Elimina un jugador
+    
+    ### 🛠️ Tecnologías utilizadas:
+    
+    * **FastAPI** - Framework web moderno y rápido
+    * **SQLAlchemy** - ORM para manejo de base de datos
+    * **PostgreSQL** - Base de datos relacional
+    * **Pydantic** - Validación de datos y serialización
+    * **Uvicorn** - Servidor ASGI de alta performance
+    
+    ### 📚 Documentación adicional:
+    
+    * [Swagger UI](/docs) - Interfaz interactiva clásica
+    * [ReDoc](/redoc) - Documentación elegante y responsive
+    * [Scalar](/scalar) - Interfaz moderna y avanzada
+    * [Health Check](/health) - Estado de la aplicación y BD
+    """,
+    version="1.2.0",
+    terms_of_service="https://example.com/terms/",
+    contact=CONTACT_INFO,
+    license_info=LICENSE_INFO,
+    openapi_tags=TAGS_METADATA,
+    servers=SERVERS,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Middleware CORS (si se conecta con frontend)
@@ -47,22 +100,67 @@ app.add_middleware(
 )
 
 # Incluir routers
-app.include_router(router, prefix="/players", tags=["Players"])
+app.include_router(router, prefix="/api/v1")
 
-@app.get("/")
+# Configurar Scalar para documentación de API
+@app.get("/scalar", include_in_schema=False)
+async def scalar_html():
+    """Documentación Scalar - Interfaz moderna para explorar la API"""
+    return get_scalar_api_reference(
+        openapi_url=app.openapi_url,
+        title=app.title,
+    )
+
+@app.get("/", tags=["System"])
 async def root():
-    return {"message": "Bienvenido a la NBA Players API"}
+    """
+    **Endpoint principal de bienvenida**
+    
+    Retorna información básica sobre la API y enlaces útiles.
+    """
+    return {
+        "message": "🏀 Bienvenido a la NBA Players API",
+        "version": "1.2.0",
+        "documentation": {
+            "swagger": "/docs",
+            "redoc": "/redoc", 
+            "scalar": "/scalar"
+        },
+        "api_endpoints": "/api/v1/players",
+        "health_check": "/health"
+    }
 
-@app.get("/health")
+@app.get("/health", tags=["System"])
 async def health_check():
-    """Endpoint para verificar el estado de la aplicación y base de datos"""
+    """
+    **Endpoint de verificación de estado**
+    
+    Verifica el estado de la aplicación y la conectividad con la base de datos.
+    Útil para monitoreo y sistemas de alertas.
+    
+    ### Estados posibles:
+    - **healthy**: Todo funciona correctamente
+    - **unhealthy**: Hay problemas de conectividad
+    
+    ### Verificaciones:
+    - Conectividad con PostgreSQL
+    - Estado general de la aplicación
+    """
     try:
         # Intentar conectar usando el engine
         with engine.connect():
             db_status = True
-    except Exception:
+            db_message = "Conectado correctamente"
+    except Exception as e:
         db_status = False
+        db_message = f"Error de conexión: {str(e)}"
+        
     return {
         "status": "healthy" if db_status else "unhealthy",
-        "database": "connected" if db_status else "disconnected"
+        "timestamp": "2025-09-04T00:00:00Z",
+        "database": {
+            "status": "connected" if db_status else "disconnected",
+            "message": db_message
+        },
+        "version": "1.2.0"
     }
