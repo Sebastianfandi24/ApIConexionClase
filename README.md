@@ -111,7 +111,31 @@ print(f"✅ API Status: {response.json()['status']}")
 
 El sistema sigue el patrón de **Arquitectura en Capas** (Layered Architecture) con separación clara de responsabilidades inspirada en mejores prácticas de software empresarial:
 
-![Arquitectura NBA API](https://via.placeholder.com/800x400/0080ff/ffffff?text=Arquitectura+NBA+API)
+```mermaid
+graph TD
+    A[🎯 HTTP Request] --> B[📊 Controllers Layer]
+    B --> C[🔧 Services Layer]
+    C --> D[💾 Repository Layer]
+    D --> E[🗄️ PostgreSQL Database]
+    
+    B --> F[📋 Pydantic Schemas]
+    F --> G[✅ Data Validation]
+    
+    C --> H[🏀 Business Logic]
+    C --> I[🔍 Data Processing]
+    
+    D --> J[🔄 ORM SQLAlchemy]
+    J --> K[📊 Models & Relations]
+    
+    E --> L[📈 Query Optimization]
+    E --> M[🔒 ACID Transactions]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+```
 
 ### � Principios de Diseño
 
