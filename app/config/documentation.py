@@ -32,6 +32,31 @@ TAGS_METADATA: List[Dict[str, Any]] = [
         },
     },
     {
+        "name": "Users",
+        "description": """
+        **Operaciones CRUD para usuarios del sistema** 👥
+        
+        Este conjunto de endpoints permite gestionar completamente la información 
+        de usuarios del sistema, incluyendo:
+        
+        - **Crear** nuevos usuarios con validaciones robustas
+        - **Consultar** usuarios individuales o listas paginadas
+        - **Actualizar** información existente (parcial o completa)
+        - **Eliminar** usuarios del sistema
+        - **Buscar** usuarios por nombre de usuario
+        
+        ### Características de seguridad:
+        - Contraseñas hasheadas automáticamente
+        - Validación de nombres de usuario únicos
+        - Formatos de entrada validados
+        - Longitudes mínimas y máximas
+        """,
+        "externalDocs": {
+            "description": "Mejores prácticas de gestión de usuarios",
+            "url": "https://fastapi.tiangolo.com/tutorial/security/",
+        },
+    },
+    {
         "name": "System",
         "description": """
         **Endpoints del sistema para monitoreo y estado** ⚙️
