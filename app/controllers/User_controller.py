@@ -1,16 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-import re
+from typing import List
 
 from app.config.NBA_database import get_db
-from app.services.User_service import (
-    listar_usuarios,
-    obtener_usuario,
-    obtener_usuario_por_username,
-    crear_usuario,
-    actualizar_usuario,
-    eliminar_usuario
-)
+from app.services.User_service import UserService
 from app.Schema.User_Schema import (
     UserCreate, 
     UserUpdate, 
@@ -18,12 +12,19 @@ from app.Schema.User_Schema import (
     MessageResponse, 
     ErrorResponse
 )
+from app.dependencies.auth_dependencies import get_current_user
+from app.models.User_model import User
+import logging
 
+logger = logging.getLogger(__name__)
 
+# Router para endpoints de usuarios (TODOS PROTEGIDOS CON JWT)
 router = APIRouter(
-    prefix="/users",
+    prefix="/api/v1/users",
     tags=["Users"],
     responses={
+        401: {"description": "No autorizado - Token JWT requerido"},
+        403: {"description": "Prohibido"},
         404: {"model": ErrorResponse, "description": "Usuario no encontrado"},
         400: {"model": ErrorResponse, "description": "Datos inválidos"},
         500: {"model": ErrorResponse, "description": "Error interno del servidor"}
@@ -32,18 +33,7 @@ router = APIRouter(
 
 
 # -------------------------------
-# Helper → Validación de user_id
-# -------------------------------
-def validar_id(user_id: str):
-    if not re.match(r"^[0-9]+$", user_id):
-        raise HTTPException(
-            status_code=400,
-            detail="El ID del usuario debe ser un número válido."
-        )
-
-
-# -------------------------------
-# GET /users → Listar usuarios
+# GET /users → Listar usuarios (PROTEGIDO)
 # -------------------------------
 @router.get(
     "/",
@@ -79,6 +69,7 @@ def validar_id(user_id: str):
     }
 )
 def get_users(
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
     skip: int = Query(
         0, 
         ge=0, 
@@ -95,15 +86,22 @@ def get_users(
     db: Session = Depends(get_db)
 ):
     """
-    Endpoint para obtener una lista paginada de usuarios.
+    GET /users/
+    Lista usuarios del sistema (SOLO USUARIOS AUTENTICADOS)
+    Requiere token JWT válido.
     """
     try:
-        users = listar_usuarios(db, skip=skip, limit=limit)
+        service = UserService(db)
+        users = service.get_all_users(skip=skip, limit=limit)
+        
+        logger.info(f"Usuario {current_user.username} consultó lista de usuarios (skip={skip}, limit={limit})")
         return users
+        
     except Exception as e:
+        logger.error(f"Error al listar usuarios: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            detail="Error interno del servidor"
         )
 
 
@@ -148,24 +146,36 @@ def get_users(
         }
     }
 )
-def get_user(user_id: int, db: Session = Depends(get_db)):
+def get_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    db: Session = Depends(get_db)
+):
     """
-    Endpoint para obtener un usuario específico por su ID.
+    GET /users/{user_id}
+    Obtiene un usuario específico por ID (SOLO USUARIOS AUTENTICADOS)
+    Requiere token JWT válido.
     """
     try:
-        user = obtener_usuario(db, user_id=user_id)
+        service = UserService(db)
+        user = service.obtener_usuario(user_id)
+        
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Usuario con ID {user_id} no encontrado"
             )
+        
+        logger.info(f"Usuario {current_user.username} consultó usuario ID: {user_id}")
         return user
+        
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error al obtener usuario: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            detail="Error interno del servidor"
         )
 
 
@@ -196,24 +206,36 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         }
     }
 )
-def get_user_by_username(username: str, db: Session = Depends(get_db)):
+def get_user_by_username(
+    username: str,
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    db: Session = Depends(get_db)
+):
     """
-    Endpoint para obtener un usuario específico por su username.
+    GET /users/username/{username}
+    Obtiene un usuario específico por username (SOLO USUARIOS AUTENTICADOS)
+    Requiere token JWT válido.
     """
     try:
-        user = obtener_usuario_por_username(db, username=username)
+        service = UserService(db)
+        user = service.obtener_usuario_por_username(username)
+        
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Usuario con username '{username}' no encontrado"
             )
+        
+        logger.info(f"Usuario {current_user.username} consultó usuario por username: {username}")
         return user
+        
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error al obtener usuario por username: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            detail="Error interno del servidor"
         )
 
 
@@ -261,26 +283,36 @@ def get_user_by_username(username: str, db: Session = Depends(get_db)):
         }
     }
 )
-def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
+def create_user(
+    user_data: UserCreate,
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    db: Session = Depends(get_db)
+):
     """
-    Endpoint para crear un nuevo usuario.
+    POST /users/
+    Crea un nuevo usuario (SOLO USUARIOS AUTENTICADOS)
+    Requiere token JWT válido.
     """
     try:
-        new_user = crear_usuario(
-            db,
+        service = UserService(db)
+        new_user = service.crear_usuario(
             username=user_data.username,
             password=user_data.password
         )
+        
+        logger.info(f"Usuario {current_user.username} creó nuevo usuario: {user_data.username}")
         return new_user
+        
     except ValueError as ve:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(ve)
         )
     except Exception as e:
+        logger.error(f"Error al crear usuario: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            detail="Error interno del servidor"
         )
 
 
@@ -321,19 +353,25 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 def update_user(
     user_id: int,
     user_data: UserUpdate,
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
     db: Session = Depends(get_db)
 ):
     """
-    Endpoint para actualizar un usuario existente.
+    PUT /users/{user_id}
+    Actualiza un usuario existente (SOLO USUARIOS AUTENTICADOS)
+    Requiere token JWT válido.
     """
     try:
-        updated_user = actualizar_usuario(
-            db,
+        service = UserService(db)
+        updated_user = service.actualizar_usuario(
             user_id=user_id,
             username=user_data.username,
             password=user_data.password
         )
+        
+        logger.info(f"Usuario {current_user.username} actualizó usuario ID: {user_id}")
         return updated_user
+        
     except ValueError as ve:
         if "no encontrado" in str(ve):
             raise HTTPException(
@@ -345,6 +383,12 @@ def update_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(ve)
             )
+    except Exception as e:
+        logger.error(f"Error al actualizar usuario: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -389,22 +433,35 @@ def update_user(
         }
     }
 )
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    db: Session = Depends(get_db)
+):
     """
-    Endpoint para eliminar un usuario.
+    DELETE /users/{user_id}
+    Elimina un usuario (SOLO USUARIOS AUTENTICADOS)
+    Requiere token JWT válido.
     """
     try:
-        deleted_user = eliminar_usuario(db, user_id=user_id)
-        return MessageResponse(
-            message=f"Usuario '{deleted_user.username}' eliminado exitosamente"
+        service = UserService(db)
+        deleted_user = service.eliminar_usuario(user_id)
+        
+        logger.info(f"Usuario {current_user.username} eliminó usuario ID: {user_id}")
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": f"Usuario con ID {user_id} eliminado exitosamente"}
         )
+        
     except ValueError as ve:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(ve)
         )
     except Exception as e:
+        logger.error(f"Error al eliminar usuario: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            detail="Error interno del servidor"
         )

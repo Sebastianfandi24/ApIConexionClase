@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.repositories.User_repository import UserRepository
 from app.models.User_model import User
-import hashlib
+from app.utils.jwt_utils import jwt_manager
 
 
 """
@@ -9,7 +9,7 @@ Librerías utilizadas:
 - repositories.User_repository: Proporciona la clase UserRepository para la gestión de usuarios en la base de datos.
 - models.User_model: Define el modelo User que representa a un usuario del sistema.
 - sqlalchemy.orm.Session: Permite manejar la sesión de la base de datos para realizar operaciones transaccionales.
-- hashlib: Para hashear contraseñas de forma segura.
+- utils.jwt_utils: Para hashear contraseñas de forma segura usando bcrypt.
 """
 
 
@@ -26,8 +26,8 @@ class UserService:
         self.repository = UserRepository(db_session)
 
     def _hash_password(self, password: str) -> str:
-        """Hashea una contraseña usando SHA-256"""
-        return hashlib.sha256(password.encode()).hexdigest()
+        """Hashea una contraseña usando bcrypt a través del jwt_manager"""
+        return jwt_manager.get_password_hash(password)
 
     def listar_usuarios(self, skip: int = 0, limit: int = 100):
         """

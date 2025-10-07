@@ -18,6 +18,9 @@ class JWTManager:
     @staticmethod
     def get_password_hash(password: str) -> str:
         """Genera el hash de una contraseña"""
+        # Asegurar que la contraseña no exceda el límite de bcrypt (72 bytes)
+        if len(password.encode('utf-8')) > 72:
+            password = password[:72]
         return pwd_context.hash(password)
     
     @staticmethod

@@ -105,7 +105,7 @@ app.add_middleware(
 # Incluir routers
 app.include_router(auth_router)  # ← Nuevo router de autenticación
 app.include_router(nba_router)
-app.include_router(user_router, prefix="/api/v1")
+app.include_router(user_router)  # Sin prefix adicional porque ya tiene prefix="/api/v1/users"
 
 # Configurar Scalar para documentación de API
 @app.get("/scalar", include_in_schema=False)
