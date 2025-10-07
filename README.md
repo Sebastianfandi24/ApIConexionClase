@@ -1,10 +1,10 @@
 # 🏀 NBA Players API
 
-### API RESTful Empresarial para Gestión de Jugadores NBA con Autenticación JWT
+### API RESTful Empresarial para Gestión de Jugadores NBA con Autenticación JWT + Frontend Web
 
-🚀 Sistema completo de gestión de jugadores NBA con autenticación segura, logs detallados y arquitectura empresarial en capas
+🚀 Sistema completo de gestión de jugadores NBA con autenticación segura, logs detallados, arquitectura empresarial en capas **y interfaz web moderna**
 
-🎯 [Inicio Rápido](#-inicio-rápido) • 📖 [Documentación](#-documentación-interactiva) • 🛠️ [API Reference](#-endpoints-de-la-api) • 🔐 [Autenticación](#-autenticación-jwt) • 🧪 [Pruebas](#-guía-de-pruebas)
+🎯 [Inicio Rápido](#-inicio-rápido) • 🌐 [Frontend Web](#-frontend-web) • 📖 [Documentación](#-documentación-interactiva) • 🛠️ [API Reference](#-endpoints-de-la-api) • 🔐 [Autenticación](#-autenticación-jwt) • 🧪 [Pruebas](#-guía-de-pruebas)
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-00C7B7?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=flat&logo=python)](https://python.org)
@@ -44,6 +44,47 @@ python -m fastapi dev app/main.py
 ```
 
 ✅ **Resultado**: API funcionando en [http://127.0.0.1:8000](http://127.0.0.1:8000) con documentación automática
+
+## 🌐 Frontend Web
+
+### 🎨 Interfaz Web Moderna
+
+Incluye una interfaz web completa para gestionar jugadores NBA:
+
+- **Autenticación visual**: Login y registro con interfaz moderna
+- **Gestión completa**: Crear, ver, editar y eliminar jugadores
+- **Responsive design**: Funciona en desktop, tablet y móvil
+- **Tiempo real**: Sincronización automática con la API
+
+### 🚀 Ejecutar Frontend
+
+#### **Paso 1**: Iniciar el backend (API)
+```bash
+# En el directorio raíz
+fastapi dev app/main.py
+```
+
+#### **Paso 2**: Iniciar el frontend
+```bash
+# En otra terminal
+cd Front
+python3 serve.py
+```
+
+#### **Paso 3**: Abrir en navegador
+Ve a: [http://localhost:3000](http://localhost:3000)
+
+### 📱 Características del Frontend
+
+- ✅ **Autenticación completa** - Login/registro de usuarios
+- ✅ **CRUD de jugadores** - Crear, ver, editar, eliminar
+- ✅ **Interfaz responsive** - Desktop y móvil
+- ✅ **Validaciones en tiempo real** - Formularios inteligentes
+- ✅ **Notificaciones** - Mensajes de éxito/error
+- ✅ **Paginación** - Navegación por páginas
+- ✅ **Persistencia de sesión** - Mantiene login activo
+
+> 📋 **Más detalles**: Ver [`Front/README.md`](Front/README.md) para documentación completa del frontend
 
 ### 🔍 Verificación Rápida
 
