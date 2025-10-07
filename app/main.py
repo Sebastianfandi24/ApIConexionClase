@@ -6,6 +6,7 @@ from app.models.User_model import User  # Importar modelo User
 from app.config.NBA_database import engine
 from app.controllers.NBA_controller import router as nba_router
 from app.controllers.User_controller import router as user_router
+from app.controllers.Auth_controller import router as auth_router
 from app.config.documentation import (
     TAGS_METADATA, 
     CONTACT_INFO, 
@@ -102,7 +103,8 @@ app.add_middleware(
 )
 
 # Incluir routers
-app.include_router(nba_router, prefix="/api/v1")
+app.include_router(auth_router)  # ← Nuevo router de autenticación
+app.include_router(nba_router)
 app.include_router(user_router, prefix="/api/v1")
 
 # Configurar Scalar para documentación de API

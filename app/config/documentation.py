@@ -12,6 +12,8 @@ TAGS_METADATA: List[Dict[str, Any]] = [
         "description": """
         **Operaciones CRUD para jugadores de la NBA** 🏀
         
+        **⚠️ REQUIERE AUTENTICACIÓN JWT ⚠️**
+        
         Este conjunto de endpoints permite gestionar completamente la información 
         de jugadores de la NBA, incluyendo:
         
@@ -25,10 +27,43 @@ TAGS_METADATA: List[Dict[str, Any]] = [
         - Rangos de peso (50 - 200 kg)
         - Formatos de fecha válidos
         - Longitudes de texto apropiadas
+        
+        ### Autenticación:
+        - Todos los endpoints requieren token JWT válido
+        - Usar el header: `Authorization: Bearer <token>`
+        - Lista limitada a 10 registros máximo para usuarios autenticados
         """,
         "externalDocs": {
             "description": "Documentación oficial de la NBA",
             "url": "https://www.nba.com/",
+        },
+    },
+    {
+        "name": "Autenticación",
+        "description": """
+        **Sistema de autenticación JWT** 🔐
+        
+        Endpoints para gestión de autenticación y autorización:
+        
+        - **Login**: Autenticación con username/password, retorna token JWT
+        - **Register**: Registro de nuevos usuarios en el sistema
+        - **Profile**: Información del usuario autenticado actual
+        
+        ### Flujo de autenticación:
+        1. Registrar usuario con `/api/v1/auth/register`
+        2. Hacer login con `/api/v1/auth/login` (retorna token)
+        3. Usar token en header `Authorization: Bearer <token>`
+        4. Acceder a endpoints protegidos
+        
+        ### Características de seguridad:
+        - Contraseñas hasheadas con bcrypt
+        - Tokens JWT con expiración (1 hora)
+        - Validación de usuarios activos
+        - Logging de eventos de autenticación
+        """,
+        "externalDocs": {
+            "description": "JWT.io - Información sobre tokens JWT",
+            "url": "https://jwt.io/",
         },
     },
     {
