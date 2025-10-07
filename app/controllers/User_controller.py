@@ -16,7 +16,7 @@ from app.dependencies.auth_dependencies import get_current_user
 from app.models.User_model import User
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('nba_api.controllers.user')
 
 # Router para endpoints de usuarios (TODOS PROTEGIDOS CON JWT)
 router = APIRouter(
@@ -94,7 +94,9 @@ def get_users(
         service = UserService(db)
         users = service.get_all_users(skip=skip, limit=limit)
         
-        logger.info(f"Usuario {current_user.username} consultó lista de usuarios (skip={skip}, limit={limit})")
+        # Log detallado con información del usuario
+        logger.info(f"👥 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) generó el listado completo de usuarios (skip={skip}, limit={limit}) - Total encontrados: {len(users)}")
+        
         return users
         
     except Exception as e:
@@ -161,12 +163,15 @@ def get_user(
         user = service.obtener_usuario(user_id)
         
         if user is None:
+            logger.warning(f"❌ El usuario '{current_user.username}' (ID: {current_user.id}) intentó acceder al usuario ID: {user_id} que no existe")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Usuario con ID {user_id} no encontrado"
             )
         
-        logger.info(f"Usuario {current_user.username} consultó usuario ID: {user_id}")
+        # Log detallado con información del usuario
+        logger.info(f"👤 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó los detalles del usuario '{user.username}' (ID: {user_id})")
+        
         return user
         
     except HTTPException:
@@ -221,12 +226,15 @@ def get_user_by_username(
         user = service.obtener_usuario_por_username(username)
         
         if user is None:
+            logger.warning(f"❌ El usuario '{current_user.username}' (ID: {current_user.id}) intentó buscar el usuario '{username}' que no existe")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Usuario con username '{username}' no encontrado"
             )
         
-        logger.info(f"Usuario {current_user.username} consultó usuario por username: {username}")
+        # Log detallado con información del usuario
+        logger.info(f"🔍 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) buscó y encontró al usuario '{user.username}' (ID: {user.id})")
+        
         return user
         
     except HTTPException:

@@ -17,7 +17,7 @@ from app.dependencies.auth_dependencies import get_current_user
 from app.models.User_model import User
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('nba_api.controllers.nba')
 
 # Router para endpoints de jugadores NBA (PROTEGIDOS CON JWT)
 router = APIRouter(
@@ -100,7 +100,9 @@ def get_players(
         service = PlayerService(db)
         players = service.listar_jugadores(skip=skip, limit=limit)
         
-        logger.info(f"Usuario {current_user.username} consultó lista de jugadores (skip={skip}, limit={limit})")
+        # Log detallado con información del usuario
+        logger.info(f"🏀 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) generó el listado completo de jugadores (skip={skip}, limit={limit}) - Total encontrados: {len(players)}")
+        
         return players
         
     except Exception as e:
@@ -172,12 +174,15 @@ def get_player(
         player = service.obtener_jugador(player_id)
         
         if not player:
+            logger.warning(f"❌ El usuario '{current_user.username}' (ID: {current_user.id}) intentó acceder al jugador ID: {player_id} que no existe")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Jugador con ID {player_id} no encontrado"
             )
         
-        logger.info(f"Usuario {current_user.username} consultó jugador ID: {player_id}")
+        # Log detallado con información del usuario
+        logger.info(f"🔍 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó los detalles del jugador '{player.name}' (ID: {player_id})")
+        
         return player
         
     except HTTPException:
@@ -263,7 +268,9 @@ def post_player(
             birth_date=player_data.birth_date
         )
         
-        logger.info(f"Usuario {current_user.username} creó jugador: {player_data.name}")
+        # Log detallado con información del usuario
+        logger.info(f"➕ ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) creó un nuevo jugador: '{new_player.name}' (Equipo: {new_player.team})")
+        
         return new_player
         
     except ValueError as ve:

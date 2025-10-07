@@ -25,6 +25,8 @@ pip install -r requirements.txt
 
 # Ejecutar API
 fastapi dev app/main.py
+o
+python3 -m fastapi dev app/main.py
 ```
 
 ✅ **Resultado**: API funcionando en [http://localhost:8000](http://localhost:8000) con documentación automática

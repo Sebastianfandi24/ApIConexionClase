@@ -15,29 +15,31 @@ from app.config.documentation import (
 )
 from scalar_fastapi import get_scalar_api_reference
 import logging
+from app.config.logging_config import setup_nba_logging
+from app.middleware.logging_middleware import LoggingMiddleware
 
-# Configuración de logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configuración de logging mejorada
+logger = setup_nba_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("🚀 Iniciando aplicación...")
+    logger.info("🚀 ACCIÓN: Iniciando aplicación NBA API...")
 
     # La conexión se verifica automáticamente al crear el engine
 
     # Crear tablas si no existen
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("✅ Tablas verificadas/creadas correctamente")
+        logger.info("✅ ACCIÓN: Tablas de base de datos verificadas/creadas correctamente")
     except Exception as e:
         logger.error(f"❌ Error al crear tablas: {e}")
 
+    logger.info("🎯 ACCIÓN: NBA API lista para recibir peticiones en http://127.0.0.1:8000")
     yield
 
     # Shutdown
-    logger.info("⏹️ Cerrando aplicación...")
+    logger.info("⏹️ ACCIÓN: Cerrando aplicación NBA API...")
 
 # Configuración de la aplicación FastAPI
 app = FastAPI(
@@ -92,6 +94,9 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json"
 )
+
+# Middleware de logging personalizado
+app.add_middleware(LoggingMiddleware)
 
 # Middleware CORS (si se conecta con frontend)
 app.add_middleware(

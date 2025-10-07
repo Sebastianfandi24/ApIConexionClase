@@ -8,7 +8,7 @@ from app.dependencies.auth_dependencies import get_current_user
 from app.models.User_model import User
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('nba_api.controllers.auth')
 
 # Router para endpoints de autenticación
 router = APIRouter(
@@ -47,7 +47,9 @@ def login(
         # Crear token JWT
         token_response = service.create_access_token(user)
         
-        logger.info(f"Login exitoso para usuario: {login_data.username}")
+        # Log detallado del login exitoso
+        logger.info(f"🔐 ACCIÓN: El usuario '{user.username}' (ID: {user.id}) ha iniciado sesión exitosamente")
+        
         return token_response
         
     except HTTPException:
