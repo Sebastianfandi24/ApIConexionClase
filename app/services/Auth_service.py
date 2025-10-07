@@ -65,6 +65,25 @@ class AuthService:
             expires_in=jwt_manager.get_token_expires_seconds()
         )
     
+    def create_access_token_custom(self, user: User, expires_in_seconds: int) -> TokenResponse:
+        """Crea un token JWT con tiempo de expiración personalizado (SOLO PARA PRUEBAS)"""
+        from datetime import timedelta
+        
+        token_data = {
+            "sub": user.username,
+            "user_id": user.id,
+            "username": user.username
+        }
+        
+        custom_expires = timedelta(seconds=expires_in_seconds)
+        access_token = jwt_manager.create_access_token(data=token_data, expires_delta=custom_expires)
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=expires_in_seconds
+        )
+    
     def create_user(self, username: str, password: str) -> User:
         """
         Crea un nuevo usuario con contraseña hasheada

@@ -135,3 +135,49 @@ def get_profile(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"
         )
+
+@router.post("/login-test", response_model=TokenResponse)
+def login_test(
+    login_data: LoginRequest,
+    expires_in_seconds: int = 10,  # Por defecto 10 segundos para pruebas rápidas
+    db: Session = Depends(get_db)
+):
+    """
+    POST /auth/login-test
+    Endpoint de prueba para generar tokens con expiración personalizada.
+    ¡SOLO PARA DESARROLLO/PRUEBAS!
+    """
+    try:
+        service = AuthService(db)
+        
+        # Autenticar usuario
+        user = service.authenticate_user(login_data.username, login_data.password)
+        
+        if not user:
+            logger.warning(f"Intento de login de prueba fallido para: {login_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenciales incorrectas"
+            )
+        
+        # Crear token JWT con expiración personalizada
+        token_response = service.create_access_token_custom(user, expires_in_seconds)
+        
+        # Log detallado del login exitoso
+        logger.info(f"🧪 PRUEBA: El usuario '{user.username}' (ID: {user.id}) generó token de prueba con expiración de {expires_in_seconds} segundos")
+        
+        return token_response
+        
+    except HTTPException:
+        raise
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve)
+        )
+    except Exception as e:
+        logger.error(f"Error en login de prueba: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )

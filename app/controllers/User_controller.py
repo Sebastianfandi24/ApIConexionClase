@@ -33,101 +33,27 @@ router = APIRouter(
 
 
 # -------------------------------
-# GET /users → Listar usuarios (PROTEGIDO)
+# GET /users/me → Obtener mi perfil (PROTEGIDO)
 # -------------------------------
 @router.get(
-    "/",
-    response_model=list[UserResponse],
-    summary="Obtener lista de usuarios",
-    description="""
-    **Obtiene una lista paginada de todos los usuarios registrados en el sistema.**
-    
-    ### Parámetros de consulta:
-    - **skip**: Número de registros a omitir (para paginación)
-    - **limit**: Máximo número de registros a retornar (1-100)
-    
-    ### Casos de uso:
-    - Mostrar todos los usuarios en una interfaz de administración
-    - Implementar paginación en aplicaciones frontend
-    - Obtener datos para análisis masivo
-    """,
-    responses={
-        200: {
-            "description": "Lista de usuarios obtenida exitosamente",
-            "content": {
-                "application/json": {
-                    "example": [
-                        {
-                            "id": 1,
-                            "username": "john_doe123",
-                            "created_at": "2024-01-01T00:00:00"
-                        }
-                    ]
-                }
-            }
-        }
-    }
-)
-def get_users(
-    current_user: User = Depends(get_current_user),  # ← Requiere JWT
-    skip: int = Query(
-        0, 
-        ge=0, 
-        description="Número de registros a saltar para paginación",
-        example=0
-    ),
-    limit: int = Query(
-        50, 
-        ge=1, 
-        le=100, 
-        description="Máximo número de usuarios a retornar",
-        example=10
-    ),
-    db: Session = Depends(get_db)
-):
-    """
-    GET /users/
-    Lista usuarios del sistema (SOLO USUARIOS AUTENTICADOS)
-    Requiere token JWT válido.
-    """
-    try:
-        service = UserService(db)
-        users = service.get_all_users(skip=skip, limit=limit)
-        
-        # Log detallado con información del usuario
-        logger.info(f"👥 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) generó el listado completo de usuarios (skip={skip}, limit={limit}) - Total encontrados: {len(users)}")
-        
-        return users
-        
-    except Exception as e:
-        logger.error(f"Error al listar usuarios: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
-        )
-
-
-# -------------------------------
-# GET /users/{user_id} → Obtener usuario por ID
-# -------------------------------
-@router.get(
-    "/{user_id}",
+    "/me",
     response_model=UserResponse,
-    summary="Obtener usuario por ID",
+    summary="Obtener mi perfil",
     description="""
-    **Obtiene un usuario específico mediante su identificador único.**
+    **Obtiene el perfil del usuario autenticado.**
     
-    ### Parámetros:
-    - **user_id**: Identificador numérico del usuario
+    ### Seguridad:
+    - Solo puedes ver tu propio perfil
+    - Requiere token JWT válido
     
     ### Casos de uso:
-    - Mostrar perfil de usuario
-    - Obtener detalles específicos de un usuario
-    - Validar existencia de usuario
+    - Mostrar información del perfil del usuario logueado
+    - Verificar datos personales
+    - Obtener ID del usuario actual
     """,
     responses={
         200: {
-            "description": "Usuario encontrado exitosamente",
+            "description": "Perfil obtenido exitosamente",
             "content": {
                 "application/json": {
                     "example": {
@@ -137,14 +63,62 @@ def get_users(
                     }
                 }
             }
+        }
+    }
+)
+def get_my_profile(
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    db: Session = Depends(get_db)
+):
+    """
+    GET /users/me
+    Obtiene el perfil del usuario autenticado (SOLO SU PROPIO PERFIL)
+    Requiere token JWT válido.
+    """
+    try:
+        # Log detallado con información del usuario
+        logger.info(f"� ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil")
+        
+        return UserResponse(
+            id=current_user.id,
+            username=current_user.username,
+            created_at=current_user.created_at
+        )
+        
+    except Exception as e:
+        logger.error(f"Error al obtener perfil: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
+
+# -------------------------------
+# GET /users/{user_id} → Solo permite ver tu propio perfil por ID
+# -------------------------------
+@router.get(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Obtener usuario por ID (solo tu propio perfil)",
+    description="""
+    **Obtiene la información de un usuario por ID, pero solo si es tu propio perfil.**
+    
+    ### Seguridad:
+    - Solo puedes consultar tu propio ID de usuario
+    - Si intentas ver otro ID, recibirás un error 403 Forbidden
+    
+    ### Parámetros:
+    - **user_id**: Tu propio ID de usuario
+    """,
+    responses={
+        200: {
+            "description": "Tu perfil encontrado exitosamente"
+        },
+        403: {
+            "description": "No puedes ver el perfil de otros usuarios"
         },
         404: {
-            "description": "Usuario no encontrado",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Usuario con ID 999 no encontrado"}
-                }
-            }
+            "description": "Usuario no encontrado"
         }
     }
 )
@@ -155,22 +129,29 @@ def get_user(
 ):
     """
     GET /users/{user_id}
-    Obtiene un usuario específico por ID (SOLO USUARIOS AUTENTICADOS)
+    Solo permite obtener tu propio perfil por ID
     Requiere token JWT válido.
     """
     try:
+        # Verificar que el usuario solo pueda ver su propio perfil
+        if user_id != current_user.id:
+            logger.warning(f"🚫 SEGURIDAD: El usuario '{current_user.username}' (ID: {current_user.id}) intentó acceder al perfil del usuario ID: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permisos para ver el perfil de otros usuarios"
+            )
+        
         service = UserService(db)
         user = service.obtener_usuario(user_id)
         
         if user is None:
-            logger.warning(f"❌ El usuario '{current_user.username}' (ID: {current_user.id}) intentó acceder al usuario ID: {user_id} que no existe")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Usuario con ID {user_id} no encontrado"
             )
         
         # Log detallado con información del usuario
-        logger.info(f"👤 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó los detalles del usuario '{user.username}' (ID: {user_id})")
+        logger.info(f"👤 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil por ID")
         
         return user
         
@@ -185,26 +166,28 @@ def get_user(
 
 
 # -------------------------------
-# GET /users/username/{username} → Obtener usuario por username
+# GET /users/username/{username} → Solo permite buscar tu propio username
 # -------------------------------
 @router.get(
     "/username/{username}",
     response_model=UserResponse,
-    summary="Obtener usuario por nombre de usuario",
+    summary="Obtener usuario por username (solo tu propio username)",
     description="""
-    **Obtiene un usuario específico mediante su nombre de usuario.**
+    **Obtiene un usuario por nombre de usuario, pero solo si es tu propio username.**
+    
+    ### Seguridad:
+    - Solo puedes buscar tu propio username
+    - Si intentas buscar otro username, recibirás un error 403 Forbidden
     
     ### Parámetros:
-    - **username**: Nombre de usuario único
-    
-    ### Casos de uso:
-    - Buscar usuario por nombre de usuario
-    - Validar disponibilidad de username
-    - Autenticación y login
+    - **username**: Tu propio nombre de usuario
     """,
     responses={
         200: {
-            "description": "Usuario encontrado exitosamente"
+            "description": "Tu perfil encontrado exitosamente"
+        },
+        403: {
+            "description": "No puedes buscar otros usuarios"
         },
         404: {
             "description": "Usuario no encontrado"
@@ -218,22 +201,29 @@ def get_user_by_username(
 ):
     """
     GET /users/username/{username}
-    Obtiene un usuario específico por username (SOLO USUARIOS AUTENTICADOS)
+    Solo permite buscar tu propio username
     Requiere token JWT válido.
     """
     try:
+        # Verificar que el usuario solo pueda buscar su propio username
+        if username != current_user.username:
+            logger.warning(f"🚫 SEGURIDAD: El usuario '{current_user.username}' (ID: {current_user.id}) intentó buscar al usuario '{username}'")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permisos para buscar otros usuarios"
+            )
+        
         service = UserService(db)
         user = service.obtener_usuario_por_username(username)
         
         if user is None:
-            logger.warning(f"❌ El usuario '{current_user.username}' (ID: {current_user.id}) intentó buscar el usuario '{username}' que no existe")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Usuario con username '{username}' no encontrado"
             )
         
         # Log detallado con información del usuario
-        logger.info(f"🔍 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) buscó y encontró al usuario '{user.username}' (ID: {user.id})")
+        logger.info(f"🔍 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil por username")
         
         return user
         
