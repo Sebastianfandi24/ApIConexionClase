@@ -36,6 +36,25 @@ class UserRepository:
             self.db.rollback()
             raise e
 
+    def create_user_with_params(self, username: str, hashed_password: str) -> User:
+        """
+        Crea un nuevo usuario con parámetros específicos para autenticación JWT.
+        Método auxiliar para el servicio de autenticación.
+        """
+        try:
+            new_user = User(
+                username=username,
+                password=hashed_password,
+                is_active=True
+            )
+            self.db.add(new_user)
+            self.db.commit()
+            self.db.refresh(new_user)
+            return new_user
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise e
+
     def update_user(self, user: User) -> User:
         """Actualiza los datos de un usuario existente"""
         try:

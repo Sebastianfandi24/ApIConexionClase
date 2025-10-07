@@ -7,7 +7,7 @@
 #   - declarative_base: se usa para crear una clase base de la cual heredan los modelos ORM.
 
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, Boolean
 from app.models.NBA_model import Base
 
 """
@@ -33,8 +33,14 @@ class User(Base):
     # Contraseña del usuario (se almacenará hasheada).
     password = Column(String(255), nullable=False)
 
+    # Estado activo del usuario (para poder habilitar/deshabilitar usuarios).
+    is_active = Column(Boolean, default=True, nullable=False)
+
     # Fecha y hora de creación del registro.
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    # Fecha y hora de última actualización del registro.
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
     def __repr__(self):
-        return f"<User(id={self.id}, username='{self.username}', created_at='{self.created_at}')>"
+        return f"<User(id={self.id}, username='{self.username}', is_active={self.is_active}, created_at='{self.created_at}')>"
