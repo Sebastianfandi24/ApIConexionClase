@@ -30,9 +30,9 @@ def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        username: str = payload.get("sub")
-        if username is None:
-            logger.warning("Token JWT malformado - sin username")
+        email: str = payload.get("sub")
+        if email is None:
+            logger.warning("Token JWT malformado - sin email")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token malformado",
@@ -40,10 +40,10 @@ def get_current_user(
             )
         
         user_repo = UserRepository(db)
-        user = user_repo.get_user_by_username(username)
+        user = user_repo.get_user_by_email(email)
         
         if user is None:
-            logger.warning(f"Usuario no encontrado en token: {username}")
+            logger.warning(f"Usuario no encontrado en token: {email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Usuario no encontrado",
@@ -51,7 +51,7 @@ def get_current_user(
             )
         
         if not user.is_active:
-            logger.warning(f"Usuario inactivo intentó acceder: {username}")
+            logger.warning(f"Usuario inactivo intentó acceder: {email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Usuario inactivo",

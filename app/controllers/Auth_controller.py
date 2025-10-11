@@ -35,10 +35,10 @@ def login(
         service = AuthService(db)
         
         # Autenticar usuario
-        user = service.authenticate_user(login_data.username, login_data.password)
+        user = service.authenticate_user(login_data.email, login_data.password)
         
         if not user:
-            logger.warning(f"Intento de login fallido para: {login_data.username}")
+            logger.warning(f"Intento de login fallido para: {login_data.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Credenciales incorrectas"
@@ -48,7 +48,7 @@ def login(
         token_response = service.create_access_token(user)
         
         # Log detallado del login exitoso
-        logger.info(f"🔐 ACCIÓN: El usuario '{user.username}' (ID: {user.id}) ha iniciado sesión exitosamente")
+        logger.info(f"🔐 ACCIÓN: El usuario '{user.email}' (ID: {user.id}) ha iniciado sesión exitosamente")
         
         return token_response
         
@@ -80,16 +80,16 @@ def register(
         service = AuthService(db)
         
         # Crear usuario
-        new_user = service.create_user(register_data.username, register_data.password)
+        new_user = service.create_user(register_data.email, register_data.password)
         
-        logger.info(f"Usuario registrado exitosamente: {register_data.username}")
+        logger.info(f"Usuario registrado exitosamente: {register_data.email}")
         
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
             content={
                 "message": "Usuario creado exitosamente",
                 "user_id": new_user.id,
-                "username": new_user.username
+                "email": new_user.email
             }
         )
         
@@ -117,7 +117,7 @@ def get_profile(
     """
     try:
         service = AuthService(db)
-        profile = service.get_current_user_profile(current_user.username)
+        profile = service.get_current_user_profile(current_user.email)
         
         if not profile:
             raise HTTPException(
@@ -151,10 +151,10 @@ def login_test(
         service = AuthService(db)
         
         # Autenticar usuario
-        user = service.authenticate_user(login_data.username, login_data.password)
+        user = service.authenticate_user(login_data.email, login_data.password)
         
         if not user:
-            logger.warning(f"Intento de login de prueba fallido para: {login_data.username}")
+            logger.warning(f"Intento de login de prueba fallido para: {login_data.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Credenciales incorrectas"
@@ -164,7 +164,7 @@ def login_test(
         token_response = service.create_access_token_custom(user, expires_in_seconds)
         
         # Log detallado del login exitoso
-        logger.info(f"🧪 PRUEBA: El usuario '{user.username}' (ID: {user.id}) generó token de prueba con expiración de {expires_in_seconds} segundos")
+        logger.info(f"🧪 PRUEBA: El usuario '{user.email}' (ID: {user.id}) generó token de prueba con expiración de {expires_in_seconds} segundos")
         
         return token_response
         

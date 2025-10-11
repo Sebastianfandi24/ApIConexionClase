@@ -21,9 +21,9 @@ class UserRepository:
         """Busca un usuario por su ID numérico"""
         return self.db.query(User).filter(User.id == user_id).first()
 
-    def get_user_by_username(self, username: str) -> Optional[User]:
-        """Busca un usuario por su nombre de usuario"""
-        return self.db.query(User).filter(User.username == username).first()
+    def get_user_by_email(self, email: str) -> Optional[User]:
+        """Busca un usuario por su email"""
+        return self.db.query(User).filter(User.email == email).first()
 
     def create_user(self, user: User) -> User:
         """Inserta un nuevo usuario en la base de datos"""
@@ -36,14 +36,14 @@ class UserRepository:
             self.db.rollback()
             raise e
 
-    def create_user_with_params(self, username: str, hashed_password: str) -> User:
+    def create_user_with_params(self, email: str, hashed_password: str) -> User:
         """
         Crea un nuevo usuario con parámetros específicos para autenticación JWT.
         Método auxiliar para el servicio de autenticación.
         """
         try:
             new_user = User(
-                username=username,
+                email=email,
                 password=hashed_password,
                 is_active=True
             )

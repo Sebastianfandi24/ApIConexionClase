@@ -12,11 +12,11 @@ from app.models.NBA_model import Base
 
 """
 La clase User representa un usuario del sistema.
-Cada instancia corresponde a un usuario específico con información básica como su nombre de usuario
+Cada instancia corresponde a un usuario específico con información básica como su email único
 y contraseña.
 
 Este modelo está mapeado a la tabla 'users' en la base de datos y se diseñó bajo las siguientes normas:
-- Seguridad → uso de constraints (ej. unique en username).
+- Seguridad → uso de constraints (ej. unique en email).
 - Normalización → los atributos siguen tipos de datos adecuados (ej. password como String).
 - Escalabilidad → se puede ampliar con más atributos sin afectar la estructura.
 - Auditoría → el campo created_at permite llevar control de creación de registros.
@@ -27,8 +27,8 @@ class User(Base):
     # Identificador único del usuario (numérico).
     id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
 
-    # Nombre de usuario único.
-    username = Column(String(50), unique=True, index=True, nullable=False)
+    # Email único del usuario (usado para autenticación).
+    email = Column(String(255), unique=True, index=True, nullable=False)
 
     # Contraseña del usuario (se almacenará hasheada).
     password = Column(String(255), nullable=False)
@@ -43,4 +43,4 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     def __repr__(self):
-        return f"<User(id={self.id}, username='{self.username}', is_active={self.is_active}, created_at='{self.created_at}')>"
+        return f"<User(id={self.id}, email='{self.email}', is_active={self.is_active}, created_at='{self.created_at}')>"

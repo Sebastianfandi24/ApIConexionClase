@@ -43,29 +43,23 @@ class UserService:
         """
         return self.repository.get_user_by_id(user_id)
 
-    def obtener_usuario_por_username(self, username: str):
+    def obtener_usuario_por_email(self, email: str):
         """
-        Busca y retorna un usuario específico por su nombre de usuario.
+        Busca y retorna un usuario específico por su email.
         Retorna None si no se encuentra.
         """
-        return self.repository.get_user_by_username(username)
+        return self.repository.get_user_by_email(email)
 
-    def crear_usuario(self, username: str, password: str):
+    def crear_usuario(self, email: str, password: str):
         """
         Crea un nuevo usuario con validaciones de negocio:
-        - Username único y no vacío.
+        - Email único y válido.
         - Password no vacío y con longitud mínima.
         - Password se hashea antes de almacenar.
         """
         # Validaciones de negocio
-        if not username or username.strip() == "":
-            raise ValueError("El nombre de usuario no puede estar vacío")
-        
-        if len(username) < 3:
-            raise ValueError("El nombre de usuario debe tener al menos 3 caracteres")
-        
-        if len(username) > 50:
-            raise ValueError("El nombre de usuario no puede tener más de 50 caracteres")
+        if not email or email.strip() == "":
+            raise ValueError("El email no puede estar vacío")
         
         if not password or password.strip() == "":
             raise ValueError("La contraseña no puede estar vacía")
@@ -73,50 +67,44 @@ class UserService:
         if len(password) < 6:
             raise ValueError("La contraseña debe tener al menos 6 caracteres")
 
-        # Verificar que el username sea único
-        existing_user = self.repository.get_user_by_username(username)
+        # Verificar que el email sea único
+        existing_user = self.repository.get_user_by_email(email)
         if existing_user:
-            raise ValueError(f"El nombre de usuario '{username}' ya está en uso")
+            raise ValueError(f"El email '{email}' ya está en uso")
 
         # Hashear la contraseña
         hashed_password = self._hash_password(password)
 
         # Crear el usuario
         new_user = User(
-            username=username,
+            email=email,
             password=hashed_password
         )
 
         return self.repository.create_user(new_user)
 
-    def actualizar_usuario(self, user_id: int, username: str = None, password: str = None):
+    def actualizar_usuario(self, user_id: int, email: str = None, password: str = None):
         """
         Actualiza un usuario existente con validaciones:
         - Usuario debe existir.
-        - Si se proporciona username, debe ser único.
+        - Si se proporciona email, debe ser único.
         - Si se proporciona password, se hashea antes de almacenar.
         """
         user = self.repository.get_user_by_id(user_id)
         if not user:
             raise ValueError(f"Usuario con ID {user_id} no encontrado")
 
-        # Validar y actualizar username si se proporciona
-        if username is not None:
-            if not username or username.strip() == "":
-                raise ValueError("El nombre de usuario no puede estar vacío")
-            
-            if len(username) < 3:
-                raise ValueError("El nombre de usuario debe tener al menos 3 caracteres")
-            
-            if len(username) > 50:
-                raise ValueError("El nombre de usuario no puede tener más de 50 caracteres")
+        # Validar y actualizar email si se proporciona
+        if email is not None:
+            if not email or email.strip() == "":
+                raise ValueError("El email no puede estar vacío")
 
-            # Verificar que el nuevo username sea único (excepto para el usuario actual)
-            existing_user = self.repository.get_user_by_username(username)
+            # Verificar que el nuevo email sea único (excepto para el usuario actual)
+            existing_user = self.repository.get_user_by_email(email)
             if existing_user and existing_user.id != user_id:
-                raise ValueError(f"El nombre de usuario '{username}' ya está en uso")
+                raise ValueError(f"El email '{email}' ya está en uso")
             
-            user.username = username
+            user.email = email
 
         # Validar y actualizar password si se proporciona
         if password is not None:
@@ -155,20 +143,20 @@ def obtener_usuario(db: Session, user_id: int):
     service = UserService(db)
     return service.obtener_usuario(user_id)
 
-def obtener_usuario_por_username(db: Session, username: str):
-    """Función helper para obtener un usuario por username"""
+def obtener_usuario_por_email(db: Session, email: str):
+    """Función helper para obtener un usuario por email"""
     service = UserService(db)
-    return service.obtener_usuario_por_username(username)
+    return service.obtener_usuario_por_email(email)
 
-def crear_usuario(db: Session, username: str, password: str):
+def crear_usuario(db: Session, email: str, password: str):
     """Función helper para crear un usuario"""
     service = UserService(db)
-    return service.crear_usuario(username, password)
+    return service.crear_usuario(email, password)
 
-def actualizar_usuario(db: Session, user_id: int, username: str = None, password: str = None):
+def actualizar_usuario(db: Session, user_id: int, email: str = None, password: str = None):
     """Función helper para actualizar un usuario"""
     service = UserService(db)
-    return service.actualizar_usuario(user_id, username, password)
+    return service.actualizar_usuario(user_id, email, password)
 
 def eliminar_usuario(db: Session, user_id: int):
     """Función helper para eliminar un usuario"""

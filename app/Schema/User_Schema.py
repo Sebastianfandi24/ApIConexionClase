@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from datetime import datetime
 from typing import Optional
 
@@ -7,13 +7,10 @@ class UserBase(BaseModel):
     Esquema base para usuarios del sistema.
     Contiene los campos comunes entre operaciones.
     """
-    username: str = Field(
+    email: EmailStr = Field(
         ..., 
-        min_length=3,
-        max_length=50,
-        pattern="^[a-zA-Z0-9_]+$",
-        example="john_doe123",
-        description="Nombre de usuario único (solo letras, números y guiones bajos)"
+        example="john.doe@example.com",
+        description="Email único del usuario"
     )
 
 class UserCreate(UserBase):
@@ -21,7 +18,7 @@ class UserCreate(UserBase):
     Esquema para crear un nuevo usuario.
     
     **Campos requeridos:**
-    - username: Nombre de usuario único
+    - email: Email único del usuario
     - password: Contraseña del usuario
     """
     password: str = Field(
@@ -36,7 +33,7 @@ class UserCreate(UserBase):
         from_attributes=True,
         json_schema_extra={
             "example": {
-                "username": "john_doe123",
+                "email": "john.doe@example.com",
                 "password": "mySecurePassword123"
             }
         }
@@ -47,13 +44,10 @@ class UserUpdate(BaseModel):
     Esquema para actualizar un usuario existente.
     Todos los campos son opcionales para permitir actualizaciones parciales.
     """
-    username: Optional[str] = Field(
+    email: Optional[EmailStr] = Field(
         None,
-        min_length=3,
-        max_length=50,
-        pattern="^[a-zA-Z0-9_]+$",
-        example="new_username",
-        description="Nuevo nombre de usuario (opcional)"
+        example="new.email@example.com",
+        description="Nuevo email del usuario"
     )
     password: Optional[str] = Field(
         None,
@@ -67,7 +61,7 @@ class UserUpdate(BaseModel):
         from_attributes=True,
         json_schema_extra={
             "example": {
-                "username": "new_username",
+                "email": "new.email@example.com",
                 "password": "newSecurePassword456"
             }
         }
@@ -95,7 +89,7 @@ class UserResponse(UserBase):
         json_schema_extra={
             "example": {
                 "id": 1,
-                "username": "john_doe123",
+                "email": "john.doe@example.com",
                 "created_at": "2024-01-01T00:00:00"
             }
         }

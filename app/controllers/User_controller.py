@@ -77,11 +77,11 @@ def get_my_profile(
     """
     try:
         # Log detallado con información del usuario
-        logger.info(f"� ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil")
+        logger.info(f"👤 ACCIÓN: El usuario '{current_user.email}' (ID: {current_user.id}) consultó su propio perfil")
         
         return UserResponse(
             id=current_user.id,
-            username=current_user.username,
+            email=current_user.email,
             created_at=current_user.created_at
         )
         
@@ -135,7 +135,7 @@ def get_user(
     try:
         # Verificar que el usuario solo pueda ver su propio perfil
         if user_id != current_user.id:
-            logger.warning(f"🚫 SEGURIDAD: El usuario '{current_user.username}' (ID: {current_user.id}) intentó acceder al perfil del usuario ID: {user_id}")
+            logger.warning(f"🚫 SEGURIDAD: El usuario '{current_user.email}' (ID: {current_user.id}) intentó acceder al perfil del usuario ID: {user_id}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes permisos para ver el perfil de otros usuarios"
@@ -151,7 +151,7 @@ def get_user(
             )
         
         # Log detallado con información del usuario
-        logger.info(f"👤 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil por ID")
+        logger.info(f"👤 ACCIÓN: El usuario '{current_user.email}' (ID: {current_user.id}) consultó su propio perfil por ID")
         
         return user
         
@@ -169,18 +169,18 @@ def get_user(
 # GET /users/username/{username} → Solo permite buscar tu propio username
 # -------------------------------
 @router.get(
-    "/username/{username}",
+    "/email/{email}",
     response_model=UserResponse,
-    summary="Obtener usuario por username (solo tu propio username)",
+    summary="Obtener usuario por email (solo tu propio email)",
     description="""
-    **Obtiene un usuario por nombre de usuario, pero solo si es tu propio username.**
+    **Obtiene un usuario por email, pero solo si es tu propio email.**
     
     ### Seguridad:
-    - Solo puedes buscar tu propio username
-    - Si intentas buscar otro username, recibirás un error 403 Forbidden
+    - Solo puedes buscar tu propio email
+    - Si intentas buscar otro email, recibirás un error 403 Forbidden
     
     ### Parámetros:
-    - **username**: Tu propio nombre de usuario
+    - **email**: Tu propio email
     """,
     responses={
         200: {
@@ -194,43 +194,43 @@ def get_user(
         }
     }
 )
-def get_user_by_username(
-    username: str,
+def get_user_by_email(
+    email: str,
     current_user: User = Depends(get_current_user),  # ← Requiere JWT
     db: Session = Depends(get_db)
 ):
     """
-    GET /users/username/{username}
-    Solo permite buscar tu propio username
+    GET /users/email/{email}
+    Solo permite buscar tu propio email
     Requiere token JWT válido.
     """
     try:
-        # Verificar que el usuario solo pueda buscar su propio username
-        if username != current_user.username:
-            logger.warning(f"🚫 SEGURIDAD: El usuario '{current_user.username}' (ID: {current_user.id}) intentó buscar al usuario '{username}'")
+        # Verificar que el usuario solo pueda buscar su propio email
+        if email != current_user.email:
+            logger.warning(f"🚫 SEGURIDAD: El usuario '{current_user.email}' (ID: {current_user.id}) intentó buscar al usuario '{email}'")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes permisos para buscar otros usuarios"
             )
         
         service = UserService(db)
-        user = service.obtener_usuario_por_username(username)
+        user = service.obtener_usuario_por_email(email)
         
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Usuario con username '{username}' no encontrado"
+                detail=f"Usuario con email '{email}' no encontrado"
             )
         
         # Log detallado con información del usuario
-        logger.info(f"🔍 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil por username")
+        logger.info(f"🔍 ACCIÓN: El usuario '{current_user.email}' (ID: {current_user.id}) consultó su propio perfil por email")
         
         return user
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error al obtener usuario por username: {str(e)}")
+        logger.error(f"Error al obtener usuario por email: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"
