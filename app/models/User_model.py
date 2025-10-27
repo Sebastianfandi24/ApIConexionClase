@@ -8,7 +8,7 @@
 
 from datetime import datetime
 from sqlalchemy import Column, String, Integer, DateTime, Boolean
-from app.models.NBA_model import Base
+from app.config.NBA_database import Base
 
 """
 La clase User representa un usuario del sistema.

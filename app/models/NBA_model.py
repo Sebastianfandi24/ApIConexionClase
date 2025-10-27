@@ -9,10 +9,7 @@
 
 from datetime import datetime
 from sqlalchemy import Column, String, Float, Date, DateTime, Integer
-from sqlalchemy.orm import declarative_base
-
-# Base declarativa para que todos los modelos hereden de aquí.
-Base = declarative_base()
+from app.config.NBA_database import Base
 
 
 """
