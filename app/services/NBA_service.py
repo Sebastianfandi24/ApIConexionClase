@@ -107,7 +107,7 @@ class PlayerService:
 
         return self.repository.update_player(player)
 
-    def eliminar_jugador(self, player_id: str):
+    def eliminar_jugador(self, player_id: int):
         """
         Elimina un jugador existente según su ID.
         Lanza un error si no se encuentra.
@@ -136,15 +136,22 @@ def crear_jugador(db, player):
     )
 
 def actualizar_jugador(db, player_id: int, player):
-    return PlayerService(db).actualizar_jugador(
-        player_id,
-        name=player.name,
-        team=player.team,
-        position=player.position,
-        height_m=player.height_m,
-        weight_kg=player.weight_kg,
-        birth_date=player.birth_date
-    )
+    # Convertir el objeto player a diccionario solo con campos no None
+    update_data = {}
+    if player.name is not None:
+        update_data["name"] = player.name
+    if player.team is not None:
+        update_data["team"] = player.team
+    if player.position is not None:
+        update_data["position"] = player.position
+    if player.height_m is not None:
+        update_data["height_m"] = player.height_m
+    if player.weight_kg is not None:
+        update_data["weight_kg"] = player.weight_kg
+    if player.birth_date is not None:
+        update_data["birth_date"] = player.birth_date
+    
+    return PlayerService(db).actualizar_jugador(player_id, update_data)
 
 def eliminar_jugador(db, player_id: int):
     return PlayerService(db).eliminar_jugador(player_id)

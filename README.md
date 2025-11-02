@@ -732,7 +732,76 @@ copy .env.example .env  # Si existe
 fastapi dev app/main.py
 ```
 
-### 🔗 **Accesos Rápidos**
+### � **Instalación con Docker (Recomendado para Producción)**
+
+Docker simplifica el despliegue y garantiza consistencia entre entornos.
+
+#### **Requisitos**
+- Docker y Docker Compose instalados
+
+#### **Inicio Rápido**
+
+```bash
+# 1. Configurar variables de entorno
+cp .env.example .env
+# Edita .env con tus configuraciones
+
+# 2. Iniciar todos los servicios
+docker-compose up -d
+
+# 3. Ver logs
+docker-compose logs -f api
+```
+
+#### **URLs de Acceso**
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| API | http://localhost:8000 | API principal |
+| Docs | http://localhost:8000/docs | Swagger UI |
+| PostgreSQL | localhost:5432 | Base de datos |
+| PgAdmin | http://localhost:5050 | Admin DB (opcional) |
+
+#### **Comandos Útiles**
+
+```bash
+# Ver estado de servicios
+docker-compose ps
+
+# Detener servicios
+docker-compose down
+
+# Reiniciar con datos limpios
+docker-compose down -v
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f api      # Solo API
+docker-compose logs -f          # Todos
+```
+
+#### **Variables de Entorno**
+
+Configura estas variables en tu archivo `.env`:
+
+```bash
+# PostgreSQL (usuario no-root para seguridad)
+PGUSER=appuser
+PGPASSWORD=tu_password_seguro
+PGDATABASE=railway
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=admin_password
+
+# JWT
+JWT_SECRET_KEY=tu_clave_secreta_jwt
+
+# Opcional
+PORT=8000
+```
+
+> 📖 **Más información**: Ver [DOCKER_GUIDE.md](./DOCKER_GUIDE.md) para documentación completa
+
+### �🔗 **Accesos Rápidos**
 
 Una vez iniciada la aplicación:
 
