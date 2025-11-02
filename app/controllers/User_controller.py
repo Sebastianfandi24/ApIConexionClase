@@ -13,6 +13,7 @@ from app.Schema.User_Schema import (
     ErrorResponse
 )
 from app.dependencies.auth_dependencies import get_current_user
+from app.dependencies.permission_dependencies import can_manage_users, is_admin
 from app.models.User_model import User
 import logging
 
@@ -283,19 +284,20 @@ def get_user_by_username(
 )
 def create_user(
     user_data: UserCreate,
-    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    current_user: User = Depends(can_manage_users),  # ← Solo admins
     db: Session = Depends(get_db)
 ):
     """
     POST /users/
-    Crea un nuevo usuario (SOLO USUARIOS AUTENTICADOS)
-    Requiere token JWT válido.
+    Crea un nuevo usuario (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_manage_users.
     """
     try:
         service = UserService(db)
         new_user = service.crear_usuario(
             username=user_data.username,
-            password=user_data.password
+            password=user_data.password,
+            role_id=user_data.role_id
         )
         
         logger.info(f"Usuario {current_user.username} creó nuevo usuario: {user_data.username}")
@@ -351,20 +353,21 @@ def create_user(
 def update_user(
     user_id: int,
     user_data: UserUpdate,
-    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    current_user: User = Depends(can_manage_users),  # ← Solo admins
     db: Session = Depends(get_db)
 ):
     """
     PUT /users/{user_id}
-    Actualiza un usuario existente (SOLO USUARIOS AUTENTICADOS)
-    Requiere token JWT válido.
+    Actualiza un usuario existente (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_manage_users.
     """
     try:
         service = UserService(db)
         updated_user = service.actualizar_usuario(
             user_id=user_id,
             username=user_data.username,
-            password=user_data.password
+            password=user_data.password,
+            role_id=user_data.role_id
         )
         
         logger.info(f"Usuario {current_user.username} actualizó usuario ID: {user_id}")
@@ -433,13 +436,13 @@ def update_user(
 )
 def delete_user(
     user_id: int,
-    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    current_user: User = Depends(can_manage_users),  # ← Solo admins
     db: Session = Depends(get_db)
 ):
     """
     DELETE /users/{user_id}
-    Elimina un usuario (SOLO USUARIOS AUTENTICADOS)
-    Requiere token JWT válido.
+    Elimina un usuario (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_manage_users.
     """
     try:
         service = UserService(db)

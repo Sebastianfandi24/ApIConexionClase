@@ -3,10 +3,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.NBA_model import Base
 from app.models.User_model import User  # Importar modelo User
+from app.models.Role_model import Role  # Importar modelo Role
 from app.config.NBA_database import engine
 from app.controllers.NBA_controller import router as nba_router
 from app.controllers.User_controller import router as user_router
 from app.controllers.Auth_controller import router as auth_router
+from app.controllers.Role_controller import router as role_router
 from app.config.documentation import (
     TAGS_METADATA, 
     CONTACT_INFO, 
@@ -108,9 +110,10 @@ app.add_middleware(
 )
 
 # Incluir routers
-app.include_router(auth_router)  # ← Nuevo router de autenticación
-app.include_router(nba_router)
-app.include_router(user_router)  # Sin prefix adicional porque ya tiene prefix="/api/v1/users"
+app.include_router(auth_router)  # Router de autenticación (login, register)
+app.include_router(nba_router)   # Router de jugadores NBA
+app.include_router(user_router)  # Router de usuarios
+app.include_router(role_router)  # Router de roles (solo admins)
 
 # Configurar Scalar para documentación de API
 @app.get("/scalar", include_in_schema=False)

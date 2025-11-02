@@ -14,6 +14,12 @@ from app.Schema.NBA_Schema import (
     ErrorResponse
 )
 from app.dependencies.auth_dependencies import get_current_user
+from app.dependencies.permission_dependencies import (
+    can_create_players,
+    can_read_players,
+    can_update_players,
+    can_delete_players
+)
 from app.models.User_model import User
 import logging
 
@@ -74,7 +80,7 @@ router = APIRouter(
     }
 )
 def get_players(
-    current_user: User = Depends(get_current_user),  # ← Equivale a @jwt_required()
+    current_user: User = Depends(can_read_players),  # ← Requiere permiso de lectura
     skip: int = Query(
         0, 
         ge=0, 
@@ -92,9 +98,9 @@ def get_players(
 ):
     """
     GET /players/
-    Lista jugadores NBA (SOLO USUARIOS AUTENTICADOS)
+    Lista jugadores NBA (USUARIOS CON PERMISO DE LECTURA)
     Limitado a 10 registros máximo por seguridad.
-    Requiere token JWT válido.
+    Requiere token JWT válido y permiso can_read_players.
     """
     try:
         service = PlayerService(db)
@@ -161,13 +167,13 @@ def get_players(
 )
 def get_player(
     player_id: int,
-    current_user: User = Depends(get_current_user),  # ← Equivale a @jwt_required()
+    current_user: User = Depends(can_read_players),  # ← Requiere permiso de lectura
     db: Session = Depends(get_db)
 ):
     """
     GET /players/{player_id}
-    Obtiene un jugador específico por ID (SOLO USUARIOS AUTENTICADOS)
-    Requiere token JWT válido.
+    Obtiene un jugador específico por ID (USUARIOS CON PERMISO DE LECTURA)
+    Requiere token JWT válido y permiso can_read_players.
     """
     try:
         service = PlayerService(db)
@@ -249,13 +255,13 @@ def get_player(
 )
 def post_player(
     player_data: PlayerCreate,
-    current_user: User = Depends(get_current_user),  # ← Equivale a @jwt_required()
+    current_user: User = Depends(can_create_players),  # ← Requiere permiso de creación
     db: Session = Depends(get_db)
 ):
     """
     POST /players/
-    Crea un nuevo jugador NBA (SOLO USUARIOS AUTENTICADOS)
-    Requiere token JWT válido.
+    Crea un nuevo jugador NBA (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_create_players.
     """
     try:
         service = PlayerService(db)
@@ -340,13 +346,13 @@ def post_player(
 def put_player(
     player_id: int,
     player_data: PlayerUpdate,
-    current_user: User = Depends(get_current_user),  # ← Equivale a @jwt_required()
+    current_user: User = Depends(can_update_players),  # ← Requiere permiso de actualización
     db: Session = Depends(get_db)
 ):
     """
     PUT /players/{player_id}
-    Actualiza un jugador existente (SOLO USUARIOS AUTENTICADOS)
-    Requiere token JWT válido.
+    Actualiza un jugador existente (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_update_players.
     """
     try:
         service = PlayerService(db)
@@ -420,13 +426,13 @@ def put_player(
 )
 def delete_player(
     player_id: int,
-    current_user: User = Depends(get_current_user),  # ← Equivale a @jwt_required()
+    current_user: User = Depends(can_delete_players),  # ← Requiere permiso de eliminación
     db: Session = Depends(get_db)
 ):
     """
     DELETE /players/{player_id}
-    Elimina un jugador (SOLO USUARIOS AUTENTICADOS)
-    Requiere token JWT válido.
+    Elimina un jugador (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_delete_players.
     """
     try:
         service = PlayerService(db)
