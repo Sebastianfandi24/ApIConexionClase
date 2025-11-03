@@ -9,6 +9,7 @@ from app.controllers.NBA_controller import router as nba_router
 from app.controllers.User_controller import router as user_router
 from app.controllers.Auth_controller import router as auth_router
 from app.controllers.Role_controller import router as role_router
+from app.controllers.NBA_Map_controller import router as nba_map_router  # Router del mapa NBA
 from app.config.documentation import (
     TAGS_METADATA, 
     CONTACT_INFO, 
@@ -110,10 +111,11 @@ app.add_middleware(
 )
 
 # Incluir routers
-app.include_router(auth_router)  # Router de autenticación (login, register)
-app.include_router(nba_router)   # Router de jugadores NBA
-app.include_router(user_router)  # Router de usuarios
-app.include_router(role_router)  # Router de roles (solo admins)
+app.include_router(auth_router)     # Router de autenticación (login, register)
+app.include_router(nba_router)      # Router de jugadores NBA
+app.include_router(user_router)     # Router de usuarios
+app.include_router(role_router)     # Router de roles (solo admins)
+app.include_router(nba_map_router)  # Router del mapa interactivo NBA
 
 # Configurar Scalar para documentación de API
 @app.get("/scalar", include_in_schema=False)

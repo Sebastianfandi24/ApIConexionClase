@@ -6,6 +6,13 @@
     <title>NBA Manager - Usuario</title>
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS para mapas -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet.AwesomeMarkers CSS para iconos personalizados -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.awesome-markers@2.0.5/dist/leaflet.awesome-markers.css" />
+    <!-- Estilos personalizados para el mapa NBA -->
+    <link rel="stylesheet" href="../../assets/css/nba-map.css">
 </head>
 <body>
     <!-- Sidebar -->
@@ -19,9 +26,13 @@
         </div>
 
         <nav class="sidebar-nav">
-            <a href="#" class="nav-item active">
+            <a href="#" class="nav-item active" id="players-link">
                 <i class="fas fa-users"></i>
                 <span>Jugadores</span>
+            </a>
+            <a href="#" class="nav-item" id="map-link">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>Mapa NBA</span>
             </a>
             <a href="#" class="nav-item" id="profile-link">
                 <i class="fas fa-user"></i>
@@ -46,49 +57,51 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Header -->
-        <header class="header">
-            <h1>
-                <i class="fas fa-basketball-ball"></i>
-                Jugadores NBA
-            </h1>
-            <div class="header-actions">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="search-input" placeholder="Buscar jugador...">
-                </div>
-            </div>
-        </header>
-
-        <!-- Estadísticas -->
-        <section class="stats-section">
-            <div class="stat-card">
-                <div class="stat-icon players">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-info">
-                    <h3 id="total-players">0</h3>
-                    <p>Total Jugadores</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon teams">
+        <!-- VISTA DE JUGADORES -->
+        <div id="players-view" class="view-content">
+            <!-- Header -->
+            <header class="header">
+                <h1>
                     <i class="fas fa-basketball-ball"></i>
+                    Jugadores NBA
+                </h1>
+                <div class="header-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Buscar jugador...">
+                    </div>
                 </div>
-                <div class="stat-info">
-                    <h3 id="total-teams">0</h3>
-                    <p>Equipos</p>
+            </header>
+
+            <!-- Estadísticas -->
+            <section class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon players">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-players">0</h3>
+                        <p>Total Jugadores</p>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon info">
-                    <i class="fas fa-eye"></i>
+                <div class="stat-card">
+                    <div class="stat-icon teams">
+                        <i class="fas fa-basketball-ball"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-teams">0</h3>
+                        <p>Equipos</p>
+                    </div>
                 </div>
-                <div class="stat-info">
-                    <h3>Vista</h3>
-                    <p>Solo Lectura</p>
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Vista</h3>
+                        <p>Solo Lectura</p>
+                    </div>
                 </div>
-            </div>
         </section>
 
         <!-- Lista de Jugadores -->
@@ -108,6 +121,93 @@
                 <p>No se encontraron jugadores en el sistema</p>
             </div>
         </section>
+        </div>
+        <!-- FIN VISTA DE JUGADORES -->
+
+        <!-- VISTA DE MAPA NBA -->
+        <div id="map-view" class="view-content" style="display: none;">
+            <!-- Header del Mapa -->
+            <header class="header">
+                <h1>
+                    <i class="fas fa-map-marked-alt"></i>
+                    Mapa de Equipos NBA
+                </h1>
+                <div class="header-actions">
+                    <div class="map-legend">
+                        <span class="legend-item">
+                            <i class="fas fa-circle" style="color: #dc3545;"></i>
+                            5+ jugadores
+                        </span>
+                        <span class="legend-item">
+                            <i class="fas fa-circle" style="color: #fd7e14;"></i>
+                            3-4 jugadores
+                        </span>
+                        <span class="legend-item">
+                            <i class="fas fa-circle" style="color: #28a745;"></i>
+                            1-2 jugadores
+                        </span>
+                        <span class="legend-item">
+                            <i class="fas fa-circle" style="color: #007bff;"></i>
+                            Sin jugadores
+                        </span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Estadísticas del Mapa -->
+            <section class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon teams">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="map-total-teams">0</h3>
+                        <p>Equipos NBA</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon players">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="map-total-players">0</h3>
+                        <p>Jugadores en BD</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <i class="fas fa-map"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Mapa</h3>
+                        <p>Interactivo</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contenedor del Mapa -->
+            <section class="map-section">
+                <!-- Loading state -->
+                <div id="map-loading" class="loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando ubicaciones de equipos...</p>
+                </div>
+
+                <!-- Error state -->
+                <div id="map-error-message" class="error-message" style="display: none;"></div>
+
+                <!-- Map container -->
+                <div id="nba-map" style="height: 600px; width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
+
+                <!-- Map info -->
+                <div class="map-info" style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h3><i class="fas fa-info-circle"></i> Información del Mapa</h3>
+                    <p>Haz clic en los marcadores para ver información detallada de cada equipo NBA, incluyendo su ubicación, estadio y jugadores registrados en la base de datos.</p>
+                    <p><strong>Nota:</strong> Los colores de los marcadores indican la cantidad de jugadores de ese equipo en nuestra base de datos.</p>
+                </div>
+            </section>
+        </div>
+        <!-- FIN VISTA DE MAPA NBA -->
 
         <!-- Modal de Perfil -->
         <div id="profile-modal" class="modal" style="display: none;">
@@ -383,14 +483,84 @@
             window.location.href = '../../login.html';
         });
 
+        // ========================================
+        // NAVEGACIÓN ENTRE VISTAS
+        // ========================================
+        
+        /**
+         * Muestra la vista de jugadores (lista de jugadores NBA)
+         */
+        function showPlayersView() {
+            // Ocultar todas las vistas
+            document.querySelectorAll('.view-content').forEach(view => {
+                view.style.display = 'none';
+            });
+            
+            // Mostrar vista de jugadores
+            const playersView = document.getElementById('players-view');
+            if (playersView) {
+                playersView.style.display = 'block';
+                loadPlayers();
+            }
+            
+            // Actualizar navegación activa
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('players-link').classList.add('active');
+        }
+        
+        /**
+         * Muestra la vista del mapa NBA interactivo
+         */
+        function showMapView() {
+            // Ocultar todas las vistas
+            document.querySelectorAll('.view-content').forEach(view => {
+                view.style.display = 'none';
+            });
+            
+            // Mostrar vista del mapa
+            const mapView = document.getElementById('map-view');
+            if (mapView) {
+                mapView.style.display = 'block';
+                
+                // Inicializar mapa si no existe
+                if (!window.nbaMap && typeof initNBAMap === 'function') {
+                    setTimeout(() => initNBAMap(), 100); // Delay para asegurar que el DOM esté listo
+                }
+            }
+            
+            // Actualizar navegación activa
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('map-link').classList.add('active');
+        }
+        
+        // Event Listeners para navegación
+        document.getElementById('players-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            showPlayersView();
+        });
+        
+        document.getElementById('map-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            showMapView();
+        });
+
         // Inicializar
         window.addEventListener('DOMContentLoaded', () => {
             const auth = checkAuth();
             if (auth) {
                 document.getElementById('username-display').textContent = auth.user.username;
-                loadPlayers();
+                
+                // Iniciar con vista de jugadores
+                showPlayersView();
             }
         });
     </script>
+    
+    <!-- Leaflet JS para mapas interactivos -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet.AwesomeMarkers JS para iconos personalizados -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.awesome-markers@2.0.5/dist/leaflet.awesome-markers.min.js"></script>
+    <!-- Script del mapa NBA -->
+    <script src="../../assets/js/nba-map.js"></script>
 </body>
 </html>

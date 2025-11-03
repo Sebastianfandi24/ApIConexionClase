@@ -83,6 +83,56 @@ Ve a: [http://localhost:3000](http://localhost:3000)
 - ✅ **Notificaciones** - Mensajes de éxito/error
 - ✅ **Paginación** - Navegación por páginas
 - ✅ **Persistencia de sesión** - Mantiene login activo
+- ✅ **🗺️ Mapa NBA Interactivo** - Visualización de equipos con clima en tiempo real
+
+### 🗺️ Mapa NBA con Clima en Tiempo Real
+
+**Nueva característica:** Mapa interactivo que muestra todos los equipos NBA con información meteorológica actualizada de cada ciudad.
+
+#### 🌟 Características del Mapa
+
+- **📍 30 Equipos NBA**: Visualización completa de todos los equipos con sus ubicaciones exactas
+- **🌤️ Clima en Tiempo Real**: Integración con OpenWeatherMap API para datos meteorológicos actualizados
+- **🏟️ Información Detallada**: Estadio, ciudad, estado, conferencia y división de cada equipo
+- **👥 Roster**: Lista de jugadores de cada equipo directamente en el popup
+- **🎨 Interfaz Moderna**: Popups con diseño atractivo y emojis según temperatura
+
+#### 🌡️ Datos Meteorológicos Incluidos
+
+Cada equipo muestra:
+- 🌡️ **Temperatura actual** con emoji dinámico (🥵 >30°C, ☀️ 20-30°C, 🌤️ 10-20°C, 🥶 <10°C)
+- 💨 **Sensación térmica**
+- 💧 **Humedad** en porcentaje
+- 🌬️ **Velocidad del viento** en km/h
+- ☁️ **Nubosidad** en porcentaje
+- 🌦️ **Descripción del clima** en español
+- 🖼️ **Icono meteorológico** de OpenWeatherMap
+
+#### 🚀 Cómo Usar el Mapa
+
+1. **Iniciar Backend**: `fastapi dev app/main.py`
+2. **Iniciar Frontend**: `cd Front && python3 serve.py`
+3. **Login**: Ingresa con tu usuario (ej: user123/user123)
+4. **Click en "Mapa NBA"** en el menú
+5. **Explora**: Click en cualquier marcador para ver clima y jugadores
+
+#### 🛠️ Arquitectura Técnica
+
+**Backend:**
+- `Team_model.py` - Tabla de equipos con coordenadas geográficas
+- `Weather_service.py` - Integración con OpenWeatherMap API
+- `NBA_Map_service.py` - Lógica de negocio async para obtener clima
+- `NBA_Map_controller.py` - Endpoint `/api/v1/nba-map/teams-locations`
+
+**Frontend:**
+- `nba-map.js` - Leaflet.js para renderizado del mapa
+- `nba-map.css` - Estilos personalizados para popups de clima
+- Integración con API de equipos y clima
+
+**Base de Datos:**
+- Tabla `teams` con 30 equipos NBA
+- Campos: nombre, ciudad, estado, estadio, latitud, longitud, conferencia, división
+- Script `populate_teams.py` para inserción inicial de datos
 
 > 📋 **Más detalles**: Ver [`Front/README.md`](Front/README.md) para documentación completa del frontend
 
@@ -355,7 +405,46 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/players/" `
 | `/api/v1/users/{id}` | GET | Ver perfil por ID | Solo tu propio ID |
 | `/api/v1/users/username/{username}` | GET | Ver perfil por username | Solo tu username |
 
-### 🔐 **Autenticación (Públicos)**
+### �️ **Mapa NBA (Protegidos con JWT)**
+
+| Endpoint | Método | Descripción | Autenticación |
+|----------|--------|-------------|---------------|
+| `/api/v1/nba-map/teams-locations` | GET | Obtener equipos con ubicaciones y clima | ✅ JWT requerido |
+
+**Respuesta de ejemplo:**
+```json
+[
+  {
+    "team_id": 1,
+    "team_name": "Los Angeles Lakers",
+    "city": "Los Angeles",
+    "state": "California",
+    "stadium": "Crypto.com Arena",
+    "latitude": 34.0522,
+    "longitude": -118.2437,
+    "conference": "West",
+    "division": "Pacific",
+    "players_count": 15,
+    "players": [
+      {"id": 1, "name": "LeBron James", "position": "SF"},
+      {"id": 2, "name": "Anthony Davis", "position": "PF"}
+    ],
+    "weather": {
+      "temperature": 17.9,
+      "feels_like": 17.5,
+      "humidity": 72,
+      "pressure": 1015,
+      "wind_speed": 12.6,
+      "clouds": 5,
+      "description": "cielo claro",
+      "icon": "01d",
+      "icon_url": "https://openweathermap.org/img/wn/01d@2x.png"
+    }
+  }
+]
+```
+
+### �🔐 **Autenticación (Públicos)**
 
 | Endpoint | Método | Descripción | Autenticación |
 |----------|--------|-------------|---------------|
@@ -509,6 +598,107 @@ $playersResponse | ConvertTo-Json
 Write-Host "`n✅ ¡Pruebas completadas!" -ForegroundColor Green
 ```
 
+### 🗺️ **Pruebas del Mapa NBA con Clima**
+
+#### **Obtener Equipos con Clima en Tiempo Real**
+
+**🍎 macOS / 🐧 Linux:**
+```bash
+# Obtener token (usa tu usuario o crea uno nuevo)
+TOKEN=$(curl -s -X POST "http://127.0.0.1:8000/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user123", "password": "user123"}' | \
+  jq -r '.access_token')
+
+# Obtener ubicaciones de equipos con clima
+curl -s -X GET "http://127.0.0.1:8000/api/v1/nba-map/teams-locations" \
+  -H "Authorization: Bearer $TOKEN" | jq '.[0:3]'  # Mostrar primeros 3 equipos
+```
+
+**🪟 Windows PowerShell:**
+```powershell
+# Obtener token
+$loginBody = @{
+    username = "user123"
+    password = "user123"
+} | ConvertTo-Json
+
+$loginResp = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/login" `
+  -Method POST -Body $loginBody -ContentType "application/json"
+$TOKEN = $loginResp.access_token
+
+# Obtener equipos con clima
+$headers = @{ "Authorization" = "Bearer $TOKEN" }
+$teams = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/nba-map/teams-locations" `
+  -Headers $headers
+
+# Mostrar primeros 3 equipos con formato
+$teams[0..2] | ForEach-Object {
+    Write-Host "`n🏀 $($_.team_name)" -ForegroundColor Cyan
+    Write-Host "📍 $($_.city), $($_.state)" -ForegroundColor Yellow
+    Write-Host "🏟️ $($_.stadium)"
+    Write-Host "🌡️ Temperatura: $($_.weather.temperature)°C - $($_.weather.description)" -ForegroundColor Green
+    Write-Host "👥 Jugadores: $($_.players_count)"
+}
+```
+
+**Respuesta esperada (ejemplo):**
+```json
+[
+  {
+    "team_id": 1,
+    "team_name": "Los Angeles Lakers",
+    "city": "Los Angeles",
+    "state": "California",
+    "stadium": "Crypto.com Arena",
+    "latitude": 34.0522,
+    "longitude": -118.2437,
+    "conference": "West",
+    "division": "Pacific",
+    "players_count": 5,
+    "players": [
+      {"id": 1, "name": "LeBron James", "position": "SF"},
+      {"id": 2, "name": "Anthony Davis", "position": "PF"}
+    ],
+    "weather": {
+      "temperature": 17.9,
+      "feels_like": 17.5,
+      "humidity": 72,
+      "pressure": 1015,
+      "wind_speed": 12.6,
+      "clouds": 5,
+      "description": "cielo claro",
+      "icon": "01d"
+    }
+  }
+]
+```
+
+#### **Uso del Frontend Web - Mapa Interactivo**
+
+1. **Iniciar servidores**:
+   ```bash
+   # Terminal 1 - Backend
+   fastapi dev app/main.py
+   
+   # Terminal 2 - Frontend
+   cd Front && python3 serve.py
+   ```
+
+2. **Acceder al mapa**:
+   - Abrir: http://localhost:3000/src/pages/user.html
+   - Login con usuario registrado
+   - Click en "Mapa NBA" en el menú
+   - Explorar los 30 equipos con clima en tiempo real
+
+3. **Interacción**:
+   - Click en cualquier marcador para ver popup con:
+     - Información del equipo
+     - Clima actual de la ciudad
+     - Lista de jugadores del equipo
+   - Zoom y navegación del mapa
+   - Datos actualizados en cada carga
+
 ### 🧪 **Pruebas de Expiración de Token**
 
 #### **🍎 macOS / 🐧 Linux:**
@@ -652,28 +842,59 @@ ApIConexionClase/
 │   ├── controllers/            # 🎮 Controladores HTTP
 │   │   ├── Auth_controller.py  # Autenticación
 │   │   ├── NBA_controller.py   # Jugadores
+│   │   ├── NBA_Map_controller.py  # Mapa NBA con clima
+│   │   ├── Role_controller.py  # Roles y permisos
 │   │   └── User_controller.py  # Usuarios
 │   ├── services/               # 🧠 Lógica de negocio
 │   │   ├── Auth_service.py     # Servicios de auth
 │   │   ├── NBA_service.py      # Servicios de jugadores
+│   │   ├── NBA_Map_service.py  # Lógica del mapa NBA
+│   │   ├── Weather_service.py  # Integración OpenWeatherMap
+│   │   ├── Role_service.py     # Servicios de roles
 │   │   └── User_service.py     # Servicios de usuarios
 │   ├── repositories/           # 💾 Acceso a datos
 │   │   ├── NBA_repository.py   # CRUD jugadores
+│   │   ├── Team_repository.py  # CRUD equipos NBA
+│   │   ├── Role_repository.py  # CRUD roles
 │   │   └── User_repository.py  # CRUD usuarios
 │   ├── models/                 # 🗃️ Modelos SQLAlchemy
 │   │   ├── NBA_model.py        # Modelo de jugador
+│   │   ├── Team_model.py       # Modelo de equipo NBA
+│   │   ├── Role_model.py       # Modelo de rol
 │   │   └── User_model.py       # Modelo de usuario
 │   ├── Schema/                 # ✅ Validaciones Pydantic
 │   │   ├── NBA_Schema.py       # Schemas de jugadores
+│   │   ├── Team_Schema.py      # Schemas de equipos
+│   │   ├── Role_Schema.py      # Schemas de roles
 │   │   ├── User_Schema.py      # Schemas de usuarios
 │   │   └── Auth_Schema.py      # Schemas de autenticación
+│   ├── scripts/                # 📜 Scripts de utilidad
+│   │   └── populate_teams.py   # Poblar equipos NBA
 │   ├── dependencies/           # 🔐 Dependencias de seguridad
-│   │   └── auth_dependencies.py
+│   │   ├── auth_dependencies.py
+│   │   └── permission_dependencies.py
 │   ├── middleware/             # 🔧 Middleware personalizado
 │   │   └── logging_middleware.py
 │   ├── utils/                  # 🛠️ Utilidades
 │   │   └── jwt_utils.py        # Utilidades JWT
 │   └── main.py                 # 🚀 Punto de entrada
+├── Front/                      # 🌐 Frontend Web
+│   ├── assets/
+│   │   ├── js/
+│   │   │   ├── nba-map.js      # Lógica del mapa interactivo
+│   │   │   ├── players.js      # Gestión de jugadores
+│   │   │   ├── auth.js         # Autenticación frontend
+│   │   │   └── api.js          # Cliente API
+│   │   └── css/
+│   │       ├── nba-map.css     # Estilos del mapa
+│   │       └── ...
+│   ├── src/
+│   │   └── pages/
+│   │       ├── user.html       # Dashboard de usuario
+│   │       └── admin.html      # Panel de admin
+│   ├── index.html              # Página principal
+│   ├── login.html              # Página de login
+│   └── serve.py                # Servidor local de desarrollo
 ├── requirements.txt            # 📦 Dependencias
 └── README.md                   # 📖 Esta documentación
 ```
@@ -941,6 +1162,22 @@ Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | **PostgreSQL** | 12+ | Base de datos principal |
 | **Pydantic** | 2.0+ | Validación de datos |
 | **JWT** | - | Autenticación stateless |
+| **httpx** | - | Cliente HTTP asíncrono para APIs externas |
+
+### 🌐 **APIs Externas**
+
+| 🌍 **API** | 🎯 **Uso** | 📝 **Descripción** |
+|-----------|-----------|-------------------|
+| **OpenWeatherMap** | Datos meteorológicos | Clima en tiempo real para ciudades NBA (temperatura, humedad, viento) |
+
+### 🗺️ **Frontend - Mapa Interactivo**
+
+| 🔧 **Tecnología** | 📖 **Versión** | 🎯 **Propósito** |
+|-------------------|----------------|------------------|
+| **Leaflet.js** | 1.9.4 | Biblioteca de mapas interactivos |
+| **OpenStreetMap** | - | Tiles de mapas gratuitos |
+| **Vanilla JavaScript** | ES6+ | Lógica del frontend |
+| **CSS3** | - | Estilos modernos y responsive |
 
 ### 🔐 **Seguridad**
 
