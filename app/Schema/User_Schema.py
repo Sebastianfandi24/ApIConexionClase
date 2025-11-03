@@ -127,6 +127,55 @@ class UserResponse(UserBase):
         }
     )
 
+class UserAdminResponse(UserBase):
+    """
+    Esquema para respuestas de administrador que incluyen información sensible.
+    SOLO para uso de administradores - incluye la contraseña hasheada.
+    """
+    id: int = Field(
+        ...,
+        example=1,
+        description="Identificador único del usuario"
+    )
+    password: str = Field(
+        ...,
+        example="$2b$12$...",
+        description="Contraseña hasheada del usuario"
+    )
+    role_id: int = Field(
+        ...,
+        example=2,
+        description="ID del rol del usuario"
+    )
+    role: Optional[RoleResponse] = Field(
+        None,
+        description="Información completa del rol"
+    )
+    is_active: bool = Field(
+        ...,
+        example=True,
+        description="Estado activo del usuario"
+    )
+    created_at: datetime = Field(
+        ...,
+        example="2024-01-01T00:00:00",
+        description="Fecha y hora de creación del usuario"
+    )
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "username": "john_doe123",
+                "password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYIGI5Jq/Oy",
+                "role_id": 2,
+                "is_active": True,
+                "created_at": "2024-01-01T00:00:00"
+            }
+        }
+    )
+
 class MessageResponse(BaseModel):
     """Esquema para respuestas de mensajes generales"""
     message: str = Field(

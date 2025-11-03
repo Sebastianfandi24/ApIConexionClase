@@ -29,8 +29,10 @@ def serve_frontend():
     print()
     print("📋 Instrucciones:")
     print("1. Asegúrate de que tu API esté ejecutándose en http://localhost:8000")
-    print("2. Abre http://localhost:3000 en tu navegador")
-    print("3. Crea una cuenta o inicia sesión para ver los jugadores")
+    print("2. Abre http://localhost:3000/login.html en tu navegador")
+    print("3. Inicia sesión con las credenciales de prueba:")
+    print("   - Admin: admin123 / admin123")
+    print("   - User: user123 / user123")
     print()
     
     try:
@@ -39,7 +41,7 @@ def serve_frontend():
             
             # Intentar abrir el navegador automáticamente
             try:
-                webbrowser.open(f'http://localhost:{PORT}')
+                webbrowser.open(f'http://localhost:{PORT}/login.html')
                 print("🌐 Abriendo navegador automáticamente...")
             except:
                 print("❌ No se pudo abrir el navegador automáticamente")

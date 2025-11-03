@@ -88,18 +88,18 @@ def get_players(
         example=0
     ),
     limit: int = Query(
-        10, 
+        100, 
         ge=1, 
-        le=10, 
-        description="Máximo número de jugadores a retornar (limitado a 10 para usuarios autenticados)",
-        example=5
+        le=100, 
+        description="Máximo número de jugadores a retornar (limitado a 100)",
+        example=10
     ),
     db: Session = Depends(get_db)
 ):
     """
     GET /players/
     Lista jugadores NBA (USUARIOS CON PERMISO DE LECTURA)
-    Limitado a 10 registros máximo por seguridad.
+    Limitado a 100 registros máximo por seguridad.
     Requiere token JWT válido y permiso can_read_players.
     """
     try:

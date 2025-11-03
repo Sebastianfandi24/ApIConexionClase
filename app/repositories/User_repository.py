@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.User_model import User
 from typing import List, Optional
@@ -22,8 +22,8 @@ class UserRepository:
         return self.db.query(User).filter(User.id == user_id).first()
 
     def get_user_by_username(self, username: str) -> Optional[User]:
-        """Busca un usuario por su nombre de usuario"""
-        return self.db.query(User).filter(User.username == username).first()
+        """Busca un usuario por su nombre de usuario y carga su rol"""
+        return self.db.query(User).options(joinedload(User.role)).filter(User.username == username).first()
 
     def create_user(self, user: User) -> User:
         """Inserta un nuevo usuario en la base de datos"""

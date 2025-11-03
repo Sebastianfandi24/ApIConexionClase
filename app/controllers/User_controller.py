@@ -9,6 +9,7 @@ from app.Schema.User_Schema import (
     UserCreate, 
     UserUpdate, 
     UserResponse, 
+    UserAdminResponse,
     MessageResponse, 
     ErrorResponse
 )
@@ -78,16 +79,101 @@ def get_my_profile(
     """
     try:
         # Log detallado con información del usuario
-        logger.info(f"� ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil")
+        logger.info(f"📋 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil")
         
+        # Devolver toda la información del usuario incluyendo role_id
         return UserResponse(
             id=current_user.id,
             username=current_user.username,
+            role_id=current_user.role_id,
+            role=current_user.role,
             created_at=current_user.created_at
         )
         
     except Exception as e:
         logger.error(f"Error al obtener perfil: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
+
+# -------------------------------
+# GET /users/all → Listar todos los usuarios (SOLO ADMIN)
+# -------------------------------
+@router.get(
+    "/all",
+    response_model=List[UserAdminResponse],
+    summary="Listar todos los usuarios (Solo Admin)",
+    description="""
+    **Obtiene la lista completa de todos los usuarios del sistema con información sensible.**
+    
+    ### Seguridad:
+    - Solo administradores pueden acceder a este endpoint
+    - Incluye contraseñas hasheadas y toda la información del usuario
+    - Requiere permiso can_manage_users
+    
+    ### Casos de uso:
+    - Panel de administración de usuarios
+    - Auditoría del sistema
+    - Gestión de cuentas
+    """,
+    responses={
+        200: {
+            "description": "Lista de usuarios obtenida exitosamente",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": 1,
+                            "username": "admin123",
+                            "password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYIGI5Jq/Oy",
+                            "role_id": 1,
+                            "is_active": True,
+                            "created_at": "2024-01-01T00:00:00"
+                        }
+                    ]
+                }
+            }
+        },
+        403: {
+            "description": "No tienes permisos de administrador"
+        }
+    }
+)
+def get_all_users(
+    current_user: User = Depends(can_manage_users),  # ← Solo admin
+    db: Session = Depends(get_db)
+):
+    """
+    GET /users/all
+    Lista todos los usuarios del sistema con información completa (SOLO ADMIN)
+    Incluye contraseñas hasheadas.
+    Requiere permiso can_manage_users.
+    """
+    try:
+        service = UserService(db)
+        users = service.listar_usuarios()
+        
+        # Log detallado
+        logger.info(f"👥 ACCIÓN: El admin '{current_user.username}' (ID: {current_user.id}) consultó la lista completa de usuarios - Total: {len(users)}")
+        
+        # Convertir a UserAdminResponse incluyendo password
+        return [
+            UserAdminResponse(
+                id=user.id,
+                username=user.username,
+                password=user.password,  # Incluir password hasheado
+                role_id=user.role_id,
+                role=user.role,
+                is_active=user.is_active,
+                created_at=user.created_at
+            )
+            for user in users
+        ]
+        
+    except Exception as e:
+        logger.error(f"Error al listar usuarios: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"

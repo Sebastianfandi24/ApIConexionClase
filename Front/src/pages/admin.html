@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Manager - Admin</title>
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar admin">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-basketball-ball"></i>
+            </div>
+            <h2>NBA Manager</h2>
+            <p class="user-role admin-role">Administrador</p>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active">
+                <i class="fas fa-users"></i>
+                <span>Jugadores</span>
+            </a>
+            <a href="#" class="nav-item" id="users-link">
+                <i class="fas fa-user-shield"></i>
+                <span>Usuarios</span>
+            </a>
+            <a href="#" class="nav-item" id="profile-link">
+                <i class="fas fa-user-circle"></i>
+                <span>Mi Perfil</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <i class="fas fa-user-shield"></i>
+                <div>
+                    <p id="username-display">Admin</p>
+                    <small>Control Total</small>
+                </div>
+            </div>
+            <button id="logout-btn" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i>
+                Salir
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <h1>
+                <i class="fas fa-user-shield"></i>
+                Panel de Administración
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Buscar jugador...">
+                </div>
+                <button id="add-player-btn" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Nuevo Jugador
+                </button>
+            </div>
+        </header>
+
+        <!-- Estadísticas -->
+        <section class="stats-section">
+            <div class="stat-card admin">
+                <div class="stat-icon players">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="total-players">0</h3>
+                    <p>Total Jugadores</p>
+                </div>
+            </div>
+            <div class="stat-card admin">
+                <div class="stat-icon teams">
+                    <i class="fas fa-basketball-ball"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="total-teams">0</h3>
+                    <p>Equipos</p>
+                </div>
+            </div>
+            <div class="stat-card admin">
+                <div class="stat-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Admin</h3>
+                    <p>Acceso Total</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lista de Jugadores -->
+        <section class="players-section">
+            <div id="loading" class="loading" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando jugadores...</p>
+            </div>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+
+            <div id="players-grid" class="players-grid"></div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <i class="fas fa-basketball-ball"></i>
+                <h3>No hay jugadores</h3>
+                <p>Haz clic en "Nuevo Jugador" para agregar uno</p>
+            </div>
+        </section>
+
+        <!-- Modal Crear/Editar Jugador -->
+        <div id="player-modal" class="modal" style="display: none;">
+            <div class="modal-content modal-form">
+                <div class="modal-header">
+                    <h2>
+                        <i class="fas fa-user-plus"></i>
+                        <span id="modal-title">Nuevo Jugador</span>
+                    </h2>
+                    <button class="close-btn" id="close-player-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="player-form">
+                        <input type="hidden" id="player-id">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="player-name">
+                                    <i class="fas fa-user"></i>
+                                    Nombre Completo
+                                </label>
+                                <input type="text" id="player-name" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="player-team">
+                                    <i class="fas fa-basketball-ball"></i>
+                                    Equipo
+                                </label>
+                                <input type="text" id="player-team" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="player-position">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Posición
+                                </label>
+                                <select id="player-position" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Point Guard">Point Guard</option>
+                                    <option value="Shooting Guard">Shooting Guard</option>
+                                    <option value="Small Forward">Small Forward</option>
+                                    <option value="Power Forward">Power Forward</option>
+                                    <option value="Center">Center</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="player-height">
+                                    <i class="fas fa-ruler-vertical"></i>
+                                    Altura (metros)
+                                </label>
+                                <input type="number" id="player-height" step="0.01" min="1.5" max="2.5" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="player-weight">
+                                    <i class="fas fa-weight"></i>
+                                    Peso (kg)
+                                </label>
+                                <input type="number" id="player-weight" step="0.1" min="60" max="150" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="player-birthdate">
+                                    <i class="fas fa-birthday-cake"></i>
+                                    Fecha de Nacimiento
+                                </label>
+                                <input type="date" id="player-birthdate" required>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" id="cancel-btn">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn-primary">
+                                <i class="fas fa-save"></i>
+                                Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Perfil -->
+        <div id="profile-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-user-shield"></i> Mi Perfil</h2>
+                    <button class="close-btn" id="close-profile">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-info">
+                        <div class="profile-avatar admin-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="profile-details">
+                            <h3 id="profile-username">Admin</h3>
+                            <p class="profile-role admin-role">
+                                <i class="fas fa-crown"></i>
+                                Administrador
+                            </p>
+                            <div class="profile-permissions">
+                                <h4>Permisos:</h4>
+                                <ul class="permissions-admin">
+                                    <li><i class="fas fa-check-circle"></i> Ver jugadores</li>
+                                    <li><i class="fas fa-check-circle"></i> Crear jugadores</li>
+                                    <li><i class="fas fa-check-circle"></i> Editar jugadores</li>
+                                    <li><i class="fas fa-check-circle"></i> Eliminar jugadores</li>
+                                    <li><i class="fas fa-check-circle"></i> Gestionar usuarios</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="../../assets/js/admin.js"></script>
+</body>
+</html>
