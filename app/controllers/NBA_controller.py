@@ -1,16 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-import re
+from typing import List
 from datetime import date
 
 from app.config.NBA_database import get_db
-from app.services.NBA_service import (
-    listar_jugadores,
-    obtener_jugador,
-    crear_jugador,
-    actualizar_jugador,
-    eliminar_jugador
-)
+from app.services.NBA_service import PlayerService
 from app.Schema.NBA_Schema import (
     PlayerCreate, 
     PlayerUpdate, 
@@ -18,32 +13,33 @@ from app.Schema.NBA_Schema import (
     MessageResponse, 
     ErrorResponse
 )
+from app.dependencies.auth_dependencies import get_current_user
+from app.dependencies.permission_dependencies import (
+    can_create_players,
+    can_read_players,
+    can_update_players,
+    can_delete_players
+)
+from app.models.User_model import User
+import logging
 
+logger = logging.getLogger('nba_api.controllers.nba')
 
+# Router para endpoints de jugadores NBA (PROTEGIDOS CON JWT)
 router = APIRouter(
-    prefix="/players",
+    prefix="/api/v1/players",
     tags=["NBA Players"],
     responses={
+        401: {"description": "No autorizado - Token JWT requerido"},
+        403: {"description": "Prohibido"},
         404: {"model": ErrorResponse, "description": "Jugador no encontrado"},
         400: {"model": ErrorResponse, "description": "Datos inválidos"},
         500: {"model": ErrorResponse, "description": "Error interno del servidor"}
     }
 )
 
-
 # -------------------------------
-# Helper → Validación de player_id
-# -------------------------------
-def validar_id(player_id: str):
-    if not re.match(r"^[a-zA-Z0-9_-]+$", player_id):
-        raise HTTPException(
-            status_code=400,
-            detail="El ID del jugador solo puede contener letras, números, guiones y guiones bajos."
-        )
-
-
-# -------------------------------
-# GET /players → Listar jugadores
+# GET /players → Listar jugadores (PROTEGIDO)
 # -------------------------------
 @router.get(
     "/",
@@ -84,6 +80,7 @@ def validar_id(player_id: str):
     }
 )
 def get_players(
+    current_user: User = Depends(can_read_players),  # ← Requiere permiso de lectura
     skip: int = Query(
         0, 
         ge=0, 
@@ -91,18 +88,35 @@ def get_players(
         example=0
     ),
     limit: int = Query(
-        50, 
+        100, 
         ge=1, 
         le=100, 
-        description="Máximo número de jugadores a retornar",
+        description="Máximo número de jugadores a retornar (limitado a 100)",
         example=10
     ),
     db: Session = Depends(get_db)
 ):
     """
-    Retorna todos los jugadores registrados con paginación.
+    GET /players/
+    Lista jugadores NBA (USUARIOS CON PERMISO DE LECTURA)
+    Limitado a 100 registros máximo por seguridad.
+    Requiere token JWT válido y permiso can_read_players.
     """
-    return listar_jugadores(db, skip, limit)
+    try:
+        service = PlayerService(db)
+        players = service.listar_jugadores(skip=skip, limit=limit)
+        
+        # Log detallado con información del usuario
+        logger.info(f"🏀 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) generó el listado completo de jugadores (skip={skip}, limit={limit}) - Total encontrados: {len(players)}")
+        
+        return players
+        
+    except Exception as e:
+        logger.error(f"Error al listar jugadores: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
 
 
 # -------------------------------
@@ -151,17 +165,40 @@ def get_players(
         }
     }
 )
-def get_player(player_id: int, db: Session = Depends(get_db)):
+def get_player(
+    player_id: int,
+    current_user: User = Depends(can_read_players),  # ← Requiere permiso de lectura
+    db: Session = Depends(get_db)
+):
     """
-    Retorna un jugador específico por su ID alfanumérico.
+    GET /players/{player_id}
+    Obtiene un jugador específico por ID (USUARIOS CON PERMISO DE LECTURA)
+    Requiere token JWT válido y permiso can_read_players.
     """
-    player = obtener_jugador(db, player_id)
-    if not player:
+    try:
+        service = PlayerService(db)
+        player = service.obtener_jugador(player_id)
+        
+        if not player:
+            logger.warning(f"❌ El usuario '{current_user.username}' (ID: {current_user.id}) intentó acceder al jugador ID: {player_id} que no existe")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Jugador con ID {player_id} no encontrado"
+            )
+        
+        # Log detallado con información del usuario
+        logger.info(f"🔍 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó los detalles del jugador '{player.name}' (ID: {player_id})")
+        
+        return player
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error al obtener jugador: {str(e)}")
         raise HTTPException(
-            status_code=404,
-            detail=f"Jugador con id {player_id} no encontrado"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
         )
-    return player
 
 
 # -------------------------------
@@ -216,17 +253,43 @@ def get_player(player_id: int, db: Session = Depends(get_db)):
         }
     }
 )
-def post_player(player: PlayerCreate, db: Session = Depends(get_db)):
+def post_player(
+    player_data: PlayerCreate,
+    current_user: User = Depends(can_create_players),  # ← Requiere permiso de creación
+    db: Session = Depends(get_db)
+):
     """
-    Crea un nuevo jugador en el sistema. El id se autogenera en la base de datos.
+    POST /players/
+    Crea un nuevo jugador NBA (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_create_players.
     """
-    # Convertir birth_date a date si viene como datetime
-    player_dict = player.model_dump()
-    if "birth_date" in player_dict and hasattr(player_dict["birth_date"], "date"):
-        player_dict["birth_date"] = player_dict["birth_date"].date()
-    
-    # Crear jugador sin id, la base de datos lo asigna automáticamente
-    return crear_jugador(db, player)
+    try:
+        service = PlayerService(db)
+        new_player = service.crear_jugador(
+            name=player_data.name,
+            team=player_data.team,
+            position=player_data.position,
+            height_m=player_data.height_m,
+            weight_kg=player_data.weight_kg,
+            birth_date=player_data.birth_date
+        )
+        
+        # Log detallado con información del usuario
+        logger.info(f"➕ ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) creó un nuevo jugador: '{new_player.name}' (Equipo: {new_player.team})")
+        
+        return new_player
+        
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve)
+        )
+    except Exception as e:
+        logger.error(f"Error al crear jugador: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
 
 
 # -------------------------------
@@ -280,17 +343,43 @@ def post_player(player: PlayerCreate, db: Session = Depends(get_db)):
         }
     }
 )
-def put_player(player_id: int, player: PlayerUpdate, db: Session = Depends(get_db)):
+def put_player(
+    player_id: int,
+    player_data: PlayerUpdate,
+    current_user: User = Depends(can_update_players),  # ← Requiere permiso de actualización
+    db: Session = Depends(get_db)
+):
     """
-    Actualiza los datos de un jugador existente.
+    PUT /players/{player_id}
+    Actualiza un jugador existente (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_update_players.
     """
-    db_player = obtener_jugador(db, player_id)
-    if not db_player:
+    try:
+        service = PlayerService(db)
+        updated_player = service.actualizar_jugador(player_id, player_data.model_dump(exclude_unset=True))
+        
+        if not updated_player:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Jugador con ID {player_id} no encontrado"
+            )
+        
+        logger.info(f"Usuario {current_user.username} actualizó jugador ID: {player_id}")
+        return updated_player
+        
+    except HTTPException:
+        raise
+    except ValueError as ve:
         raise HTTPException(
-            status_code=404,
-            detail=f"Jugador con id {player_id} no encontrado"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve)
         )
-    return actualizar_jugador(db, player_id, player)
+    except Exception as e:
+        logger.error(f"Error al actualizar jugador: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
 
 
 # -------------------------------
@@ -335,16 +424,38 @@ def put_player(player_id: int, player: PlayerUpdate, db: Session = Depends(get_d
         }
     }
 )
-def delete_player(player_id: int, db: Session = Depends(get_db)):
+def delete_player(
+    player_id: int,
+    current_user: User = Depends(can_delete_players),  # ← Requiere permiso de eliminación
+    db: Session = Depends(get_db)
+):
     """
-    Elimina un jugador por su ID.
+    DELETE /players/{player_id}
+    Elimina un jugador (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_delete_players.
     """
-    db_player = obtener_jugador(db, player_id)
-    if not db_player:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Jugador con id {player_id} no encontrado"
+    try:
+        service = PlayerService(db)
+        deleted_player = service.eliminar_jugador(player_id)
+        
+        if not deleted_player:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Jugador con ID {player_id} no encontrado"
+            )
+        
+        logger.info(f"Usuario {current_user.username} eliminó jugador ID: {player_id}")
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": f"Jugador con ID {player_id} eliminado exitosamente"}
         )
-
-    eliminar_jugador(db, player_id)
-    return {"message": "Jugador eliminado correctamente"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error al eliminar jugador: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )

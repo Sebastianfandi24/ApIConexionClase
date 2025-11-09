@@ -1,22 +1,23 @@
 # 🏀 NBA Players API
 
-### API RESTful Empresarial para Gestión de Jugadores NBA
+### API RESTful Empresarial para Gestión de Jugadores NBA con Autenticación JWT + Frontend Web
 
-🚀 Transforma la gestión de datos deportivos en un sistema empresarial robusto y escalable con FastAPI y arquitectura en capas
+🚀 Sistema completo de gestión de jugadores NBA con autenticación segura, logs detallados, arquitectura empresarial en capas **y interfaz web moderna**
 
-🎯 [Inicio Rápido](#-inicio-rápido) • 📖 [Documentación](#-documentación-interactiva) • 🛠️ [API Reference](#-endpoints-de-la-api) • 🤝 [Contribuir](#-contribución)
+🎯 [Inicio Rápido](#-inicio-rápido) • 🌐 [Frontend Web](#-frontend-web) • 📖 [Documentación](#-documentación-interactiva) • 🛠️ [API Reference](#-endpoints-de-la-api) • 🔐 [Autenticación](#-autenticación-jwt) • 🧪 [Pruebas](#-guía-de-pruebas)
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-00C7B7?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=flat&logo=python)](https://python.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791?style=flat&logo=postgresql)](https://postgresql.org)
+[![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=flat&logo=jsonwebtokens)](https://jwt.io/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)](https://github.com/)
-[![API Docs](https://img.shields.io/badge/API-Docs-blue)](http://localhost:8000/docs)
+[![Security](https://img.shields.io/badge/Security-High-brightgreen)](https://github.com/)
 
 ## ⚡ Inicio Rápido
 
 ### 🏃‍♂️ Ejecutar en 60 Segundos
 
+#### **🍎 macOS / 🐧 Linux:**
 ```bash
 # Clonar e instalar
 git clone <url-del-repo>
@@ -25,18 +26,143 @@ pip install -r requirements.txt
 
 # Ejecutar API
 fastapi dev app/main.py
+# O alternativamente:
+python3 -m fastapi dev app/main.py
 ```
 
-✅ **Resultado**: API funcionando en [http://localhost:8000](http://localhost:8000) con documentación automática
+#### **🪟 Windows:**
+```cmd
+# Clonar e instalar
+git clone <url-del-repo>
+cd ApIConexionClase
+pip install -r requirements.txt
 
-### � Verificación Rápida
+# Ejecutar API
+fastapi dev app/main.py
+# O alternativamente:
+python -m fastapi dev app/main.py
+```
 
-```python
-# Verificar instalación
-import requests
+✅ **Resultado**: API funcionando en [http://127.0.0.1:8000](http://127.0.0.1:8000) con documentación automática
 
-response = requests.get("http://localhost:8000/health")
-print(f"✅ API Status: {response.json()['status']}")
+## 🌐 Frontend Web
+
+### 🎨 Interfaz Web Moderna
+
+Incluye una interfaz web completa para gestionar jugadores NBA:
+
+- **Autenticación visual**: Login y registro con interfaz moderna
+- **Gestión completa**: Crear, ver, editar y eliminar jugadores
+- **Responsive design**: Funciona en desktop, tablet y móvil
+- **Tiempo real**: Sincronización automática con la API
+
+### 🚀 Ejecutar Frontend
+
+#### **Paso 1**: Iniciar el backend (API)
+```bash
+# En el directorio raíz
+fastapi dev app/main.py
+```
+
+#### **Paso 2**: Iniciar el frontend
+```bash
+# En otra terminal
+cd Front
+python3 serve.py
+```
+
+#### **Paso 3**: Abrir en navegador
+Ve a: [http://localhost:3000](http://localhost:3000)
+
+### 📱 Características del Frontend
+
+- ✅ **Autenticación completa** - Login/registro de usuarios
+- ✅ **CRUD de jugadores** - Crear, ver, editar, eliminar
+- ✅ **Interfaz responsive** - Desktop y móvil
+- ✅ **Validaciones en tiempo real** - Formularios inteligentes
+- ✅ **Notificaciones** - Mensajes de éxito/error
+- ✅ **Paginación** - Navegación por páginas
+- ✅ **Persistencia de sesión** - Mantiene login activo
+- ✅ **🗺️ Mapa NBA Interactivo** - Visualización de equipos con clima en tiempo real
+
+### 🗺️ Mapa NBA con Clima en Tiempo Real
+
+**Nueva característica:** Mapa interactivo que muestra todos los equipos NBA con información meteorológica actualizada de cada ciudad.
+
+#### 🌟 Características del Mapa
+
+- **📍 30 Equipos NBA**: Visualización completa de todos los equipos con sus ubicaciones exactas
+- **🌤️ Clima en Tiempo Real**: Integración con OpenWeatherMap API para datos meteorológicos actualizados
+- **🏟️ Información Detallada**: Estadio, ciudad, estado, conferencia y división de cada equipo
+- **👥 Roster**: Lista de jugadores de cada equipo directamente en el popup
+- **🎨 Interfaz Moderna**: Popups con diseño atractivo y emojis según temperatura
+
+#### 🌡️ Datos Meteorológicos Incluidos
+
+Cada equipo muestra:
+- 🌡️ **Temperatura actual** con emoji dinámico (🥵 >30°C, ☀️ 20-30°C, 🌤️ 10-20°C, 🥶 <10°C)
+- 💨 **Sensación térmica**
+- 💧 **Humedad** en porcentaje
+- 🌬️ **Velocidad del viento** en km/h
+- ☁️ **Nubosidad** en porcentaje
+- 🌦️ **Descripción del clima** en español
+- 🖼️ **Icono meteorológico** de OpenWeatherMap
+
+#### 🚀 Cómo Usar el Mapa
+
+1. **Iniciar Backend**: `fastapi dev app/main.py`
+2. **Iniciar Frontend**: `cd Front && python3 serve.py`
+3. **Login**: Ingresa con tu usuario (ej: user123/user123)
+4. **Click en "Mapa NBA"** en el menú
+5. **Explora**: Click en cualquier marcador para ver clima y jugadores
+
+#### 🛠️ Arquitectura Técnica
+
+**Backend:**
+- `Team_model.py` - Tabla de equipos con coordenadas geográficas
+- `Weather_service.py` - Integración con OpenWeatherMap API
+- `NBA_Map_service.py` - Lógica de negocio async para obtener clima
+- `NBA_Map_controller.py` - Endpoint `/api/v1/nba-map/teams-locations`
+
+**Frontend:**
+- `nba-map.js` - Leaflet.js para renderizado del mapa
+- `nba-map.css` - Estilos personalizados para popups de clima
+- Integración con API de equipos y clima
+
+**Base de Datos:**
+- Tabla `teams` con 30 equipos NBA
+- Campos: nombre, ciudad, estado, estadio, latitud, longitud, conferencia, división
+- Script `populate_teams.py` para inserción inicial de datos
+
+> 📋 **Más detalles**: Ver [`Front/README.md`](Front/README.md) para documentación completa del frontend
+
+### 🔍 Verificación Rápida
+
+#### **🍎 macOS / 🐧 Linux:**
+```bash
+# Verificar que la API está funcionando
+curl http://127.0.0.1:8000/health
+```
+
+#### **🪟 Windows (PowerShell):**
+```powershell
+# Verificar que la API está funcionando
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/health"
+```
+
+#### **🪟 Windows (curl en CMD):**
+```cmd
+curl http://127.0.0.1:8000/health
+```
+
+**Respuesta esperada:**
+```json
+{
+  "status": "OK",
+  "message": "API funcionando correctamente",
+  "database": "Connected",
+  "timestamp": "2025-10-07T..."
+}
 ```
 
 ## 📋 Índice Completo
@@ -46,6 +172,15 @@ print(f"✅ API Status: {response.json()['status']}")
 
 - [⚡ Inicio Rápido](#-inicio-rápido)
 - [🎯 Descripción del Proyecto](#-descripción-del-proyecto)
+- [🔐 Sistema de Autenticación](#-sistema-de-autenticación)
+- [🏗️ Arquitectura](#-arquitectura)
+- [🚀 Instalación](#-instalación)
+- [🛠️ Endpoints de la API](#-endpoints-de-la-api)
+- [🧪 Guía de Pruebas](#-guía-de-pruebas)
+- [📊 Sistema de Logs](#-sistema-de-logs)
+- [🔒 Seguridad](#-seguridad)
+- [📖 Documentación Interactiva](#-documentación-interactiva)
+- [🤝 Contribución](#-contribución)
 - [🏗️ Arquitectura del Sistema](#️-arquitectura-del-sistema)
 - [📁 Estructura Detallada](#-estructura-detallada)
 - [🚀 Instalación y Configuración](#-instalación-y-configuración)
@@ -104,6 +239,1098 @@ print(f"✅ API Status: {response.json()['status']}")
 |---|---|---|
 | 🚫 APIs lentas y poco documentadas | ✅ FastAPI con docs automáticas | 📈 +80% velocidad de desarrollo |
 | 🚫 Validación manual propensa a errores | ✅ Validaciones Pydantic automáticas | 🔍 100% consistencia de datos |
+
+## 🔐 Sistema de Autenticación
+
+### 🎯 **Autenticación JWT Completa**
+
+El sistema utiliza **JSON Web Tokens (JWT)** para autenticación segura y stateless:
+
+- ✅ **Tokens seguros** con expiración automática (1 hora)
+- ✅ **Validación en tiempo real** en cada request
+- ✅ **Logs de seguridad** detallados
+- ✅ **Protección contra tokens expirados**
+
+### 📋 **Endpoints de Autenticación**
+
+| Endpoint | Método | Descripción | Autenticación |
+|----------|--------|-------------|---------------|
+| `/api/v1/auth/register` | POST | Registro de nuevos usuarios | ❌ No requerida |
+| `/api/v1/auth/login` | POST | Inicio de sesión + token JWT | ❌ No requerida |
+| `/api/v1/auth/login-test` | POST | Login con token de expiración personalizada | ❌ No requerida |
+| `/api/v1/auth/profile` | GET | Perfil del usuario autenticado | ✅ JWT requerido |
+
+### 🧪 **Flujo de Autenticación**
+
+#### **1. Registro de Usuario**
+
+**🍎 macOS / 🐧 Linux:**
+```bash
+curl -X POST "http://127.0.0.1:8000/api/v1/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "mi_usuario",
+    "password": "mi_password123"
+  }'
+```
+
+**🪟 Windows (PowerShell):**
+```powershell
+$body = @{
+    username = "mi_usuario"
+    password = "mi_password123"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/register" `
+  -Method POST `
+  -Body $body `
+  -ContentType "application/json"
+```
+
+**Respuesta:**
+```json
+{
+  "message": "Usuario creado exitosamente",
+  "user_id": 1,
+  "username": "mi_usuario"
+}
+```
+
+#### **2. Inicio de Sesión**
+
+**🍎 macOS / 🐧 Linux:**
+```bash
+# Obtener token y guardarlo en variable
+TOKEN=$(curl -s -X POST "http://127.0.0.1:8000/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "mi_usuario",
+    "password": "mi_password123"
+  }' | jq -r '.access_token')
+
+echo "Token: $TOKEN"
+```
+
+**🪟 Windows (PowerShell):**
+```powershell
+$loginBody = @{
+    username = "mi_usuario"
+    password = "mi_password123"
+} | ConvertTo-Json
+
+$response = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/login" `
+  -Method POST `
+  -Body $loginBody `
+  -ContentType "application/json"
+
+$TOKEN = $response.access_token
+Write-Host "Token: $TOKEN"
+```
+
+**Respuesta:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "expires_in": 3600,
+  "user": {
+    "id": 1,
+    "username": "mi_usuario"
+  }
+}
+```
+
+#### **3. Usar Token en Requests**
+
+**🍎 macOS / 🐧 Linux:**
+```bash
+# Usar token en requests protegidos
+curl -X GET "http://127.0.0.1:8000/api/v1/players/" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**🪟 Windows (PowerShell):**
+```powershell
+$headers = @{
+    "Authorization" = "Bearer $TOKEN"
+}
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/players/" `
+  -Method GET `
+  -Headers $headers
+```
+
+## 🛡️ Seguridad y Privacidad
+
+### 🔒 **Principios de Seguridad**
+
+1. **Principio de Menor Privilegio**: Los usuarios solo pueden acceder a sus propios datos
+2. **Validación Estricta**: Todos los tokens se validan en tiempo real
+3. **Logs de Auditoría**: Todas las acciones se registran con detalles del usuario
+4. **Expiración Automática**: Los tokens expiran automáticamente
+
+### 🚫 **Endpoints Restringidos por Seguridad**
+
+| ❌ **Eliminado** | ✅ **Reemplazado por** | 🛡️ **Motivo** |
+|------------------|------------------------|----------------|
+| `GET /users/` (listar todos) | `GET /users/me` | Privacidad de usuarios |
+| `GET /users/{any_id}` | `GET /users/{mi_id}` | Solo tu propio perfil |
+| `GET /users/username/{any}` | `GET /users/username/{mi_username}` | Solo tu propio username |
+
+### 📊 **Endpoints de Usuarios Seguros**
+
+| Endpoint | Descripción | Restricción |
+|----------|-------------|-------------|
+| `GET /users/me` | Ver tu propio perfil | ✅ Solo tu perfil |
+| `GET /users/{user_id}` | Ver perfil por ID | ✅ Solo si `user_id` es tu ID |
+| `GET /users/username/{username}` | Ver perfil por username | ✅ Solo si `username` es el tuyo |
+
+## 🛠️ Endpoints de la API
+
+### 🏀 **Jugadores NBA (Protegidos con JWT)**
+
+| Endpoint | Método | Descripción | Autenticación |
+|----------|--------|-------------|---------------|
+| `/api/v1/players/` | GET | Listar jugadores (paginado) | ✅ JWT requerido |
+| `/api/v1/players/{id}` | GET | Obtener jugador específico | ✅ JWT requerido |
+| `/api/v1/players/` | POST | Crear nuevo jugador | ✅ JWT requerido |
+| `/api/v1/players/{id}` | PUT | Actualizar jugador | ✅ JWT requerido |
+| `/api/v1/players/{id}` | DELETE | Eliminar jugador | ✅ JWT requerido |
+
+### 👥 **Usuarios (Protegidos y Restringidos)**
+
+| Endpoint | Método | Descripción | Restricción |
+|----------|--------|-------------|-------------|
+| `/api/v1/users/me` | GET | Ver mi perfil | Solo tu perfil |
+| `/api/v1/users/{id}` | GET | Ver perfil por ID | Solo tu propio ID |
+| `/api/v1/users/username/{username}` | GET | Ver perfil por username | Solo tu username |
+
+### �️ **Mapa NBA (Protegidos con JWT)**
+
+| Endpoint | Método | Descripción | Autenticación |
+|----------|--------|-------------|---------------|
+| `/api/v1/nba-map/teams-locations` | GET | Obtener equipos con ubicaciones y clima | ✅ JWT requerido |
+
+**Respuesta de ejemplo:**
+```json
+[
+  {
+    "team_id": 1,
+    "team_name": "Los Angeles Lakers",
+    "city": "Los Angeles",
+    "state": "California",
+    "stadium": "Crypto.com Arena",
+    "latitude": 34.0522,
+    "longitude": -118.2437,
+    "conference": "West",
+    "division": "Pacific",
+    "players_count": 15,
+    "players": [
+      {"id": 1, "name": "LeBron James", "position": "SF"},
+      {"id": 2, "name": "Anthony Davis", "position": "PF"}
+    ],
+    "weather": {
+      "temperature": 17.9,
+      "feels_like": 17.5,
+      "humidity": 72,
+      "pressure": 1015,
+      "wind_speed": 12.6,
+      "clouds": 5,
+      "description": "cielo claro",
+      "icon": "01d",
+      "icon_url": "https://openweathermap.org/img/wn/01d@2x.png"
+    }
+  }
+]
+```
+
+### �🔐 **Autenticación (Públicos)**
+
+| Endpoint | Método | Descripción | Autenticación |
+|----------|--------|-------------|---------------|
+| `/api/v1/auth/register` | POST | Registro de usuario | ❌ No requerida |
+| `/api/v1/auth/login` | POST | Inicio de sesión | ❌ No requerida |
+| `/api/v1/auth/login-test` | POST | Login de prueba (expiración personalizada) | ❌ No requerida |
+| `/api/v1/auth/profile` | GET | Perfil del usuario | ✅ JWT requerido |
+
+### 🏥 **Sistema (Públicos)**
+
+| Endpoint | Método | Descripción | Autenticación |
+|----------|--------|-------------|---------------|
+| `/health` | GET | Estado de la API y BD | ❌ No requerida |
+| `/docs` | GET | Documentación Swagger | ❌ No requerida |
+| `/scalar` | GET | Documentación Scalar | ❌ No requerida |
+
+## 🧪 Guía de Pruebas
+
+### 🚀 **Pruebas Rápidas - Flujo Completo**
+
+#### **🍎 macOS / 🐧 Linux - Script Completo**
+
+```bash
+#!/bin/bash
+echo "🧪 === PRUEBA COMPLETA NBA API ==="
+
+# 1. Verificar que la API esté funcionando
+echo "1️⃣ Verificando estado de la API..."
+curl -s http://127.0.0.1:8000/health | jq '.'
+
+# 2. Registrar usuario de prueba
+echo -e "\n2️⃣ Registrando usuario de prueba..."
+curl -s -X POST "http://127.0.0.1:8000/api/v1/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "test_user",
+    "password": "test123456"
+  }' | jq '.'
+
+# 3. Hacer login y obtener token
+echo -e "\n3️⃣ Haciendo login..."
+TOKEN=$(curl -s -X POST "http://127.0.0.1:8000/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "test_user",
+    "password": "test123456"
+  }' | jq -r '.access_token')
+echo "✅ Token obtenido: ${TOKEN:0:30}..."
+
+# 4. Ver mi perfil
+echo -e "\n4️⃣ Consultando mi perfil..."
+curl -s -X GET "http://127.0.0.1:8000/api/v1/users/me" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+# 5. Crear jugador de prueba
+echo -e "\n5️⃣ Creando jugador de prueba..."
+curl -s -X POST "http://127.0.0.1:8000/api/v1/players/" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "name": "LeBron James",
+    "team": "Los Angeles Lakers",
+    "position": "Small Forward",
+    "height_m": 2.06,
+    "weight_kg": 113.4,
+    "birth_date": "1984-12-30"
+  }' | jq '.'
+
+# 6. Listar jugadores
+echo -e "\n6️⃣ Listando jugadores..."
+curl -s -X GET "http://127.0.0.1:8000/api/v1/players/" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo -e "\n✅ ¡Pruebas completadas!"
+```
+
+#### **🪟 Windows PowerShell - Script Completo**
+
+```powershell
+Write-Host "🧪 === PRUEBA COMPLETA NBA API ===" -ForegroundColor Green
+
+# 1. Verificar que la API esté funcionando
+Write-Host "1️⃣ Verificando estado de la API..." -ForegroundColor Yellow
+$healthResponse = Invoke-RestMethod -Uri "http://127.0.0.1:8000/health"
+$healthResponse | ConvertTo-Json
+
+# 2. Registrar usuario de prueba
+Write-Host "`n2️⃣ Registrando usuario de prueba..." -ForegroundColor Yellow
+$registerBody = @{
+    username = "test_user"
+    password = "test123456"
+} | ConvertTo-Json
+
+$registerResponse = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/register" `
+  -Method POST `
+  -Body $registerBody `
+  -ContentType "application/json"
+$registerResponse | ConvertTo-Json
+
+# 3. Hacer login y obtener token
+Write-Host "`n3️⃣ Haciendo login..." -ForegroundColor Yellow
+$loginBody = @{
+    username = "test_user"
+    password = "test123456"
+} | ConvertTo-Json
+
+$loginResponse = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/login" `
+  -Method POST `
+  -Body $loginBody `
+  -ContentType "application/json"
+
+$TOKEN = $loginResponse.access_token
+Write-Host "✅ Token obtenido: $($TOKEN.Substring(0, 30))..." -ForegroundColor Green
+
+# 4. Ver mi perfil
+Write-Host "`n4️⃣ Consultando mi perfil..." -ForegroundColor Yellow
+$headers = @{
+    "Authorization" = "Bearer $TOKEN"
+}
+
+$profileResponse = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/users/me" `
+  -Method GET `
+  -Headers $headers
+$profileResponse | ConvertTo-Json
+
+# 5. Crear jugador de prueba
+Write-Host "`n5️⃣ Creando jugador de prueba..." -ForegroundColor Yellow
+$playerBody = @{
+    name = "LeBron James"
+    team = "Los Angeles Lakers"
+    position = "Small Forward"
+    height_m = 2.06
+    weight_kg = 113.4
+    birth_date = "1984-12-30"
+} | ConvertTo-Json
+
+$playerResponse = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/players/" `
+  -Method POST `
+  -Body $playerBody `
+  -ContentType "application/json" `
+  -Headers $headers
+$playerResponse | ConvertTo-Json
+
+# 6. Listar jugadores
+Write-Host "`n6️⃣ Listando jugadores..." -ForegroundColor Yellow
+$playersResponse = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/players/" `
+  -Method GET `
+  -Headers $headers
+$playersResponse | ConvertTo-Json
+
+Write-Host "`n✅ ¡Pruebas completadas!" -ForegroundColor Green
+```
+
+### 🗺️ **Pruebas del Mapa NBA con Clima**
+
+#### **Obtener Equipos con Clima en Tiempo Real**
+
+**🍎 macOS / 🐧 Linux:**
+```bash
+# Obtener token (usa tu usuario o crea uno nuevo)
+TOKEN=$(curl -s -X POST "http://127.0.0.1:8000/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user123", "password": "user123"}' | \
+  jq -r '.access_token')
+
+# Obtener ubicaciones de equipos con clima
+curl -s -X GET "http://127.0.0.1:8000/api/v1/nba-map/teams-locations" \
+  -H "Authorization: Bearer $TOKEN" | jq '.[0:3]'  # Mostrar primeros 3 equipos
+```
+
+**🪟 Windows PowerShell:**
+```powershell
+# Obtener token
+$loginBody = @{
+    username = "user123"
+    password = "user123"
+} | ConvertTo-Json
+
+$loginResp = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/login" `
+  -Method POST -Body $loginBody -ContentType "application/json"
+$TOKEN = $loginResp.access_token
+
+# Obtener equipos con clima
+$headers = @{ "Authorization" = "Bearer $TOKEN" }
+$teams = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/nba-map/teams-locations" `
+  -Headers $headers
+
+# Mostrar primeros 3 equipos con formato
+$teams[0..2] | ForEach-Object {
+    Write-Host "`n🏀 $($_.team_name)" -ForegroundColor Cyan
+    Write-Host "📍 $($_.city), $($_.state)" -ForegroundColor Yellow
+    Write-Host "🏟️ $($_.stadium)"
+    Write-Host "🌡️ Temperatura: $($_.weather.temperature)°C - $($_.weather.description)" -ForegroundColor Green
+    Write-Host "👥 Jugadores: $($_.players_count)"
+}
+```
+
+**Respuesta esperada (ejemplo):**
+```json
+[
+  {
+    "team_id": 1,
+    "team_name": "Los Angeles Lakers",
+    "city": "Los Angeles",
+    "state": "California",
+    "stadium": "Crypto.com Arena",
+    "latitude": 34.0522,
+    "longitude": -118.2437,
+    "conference": "West",
+    "division": "Pacific",
+    "players_count": 5,
+    "players": [
+      {"id": 1, "name": "LeBron James", "position": "SF"},
+      {"id": 2, "name": "Anthony Davis", "position": "PF"}
+    ],
+    "weather": {
+      "temperature": 17.9,
+      "feels_like": 17.5,
+      "humidity": 72,
+      "pressure": 1015,
+      "wind_speed": 12.6,
+      "clouds": 5,
+      "description": "cielo claro",
+      "icon": "01d"
+    }
+  }
+]
+```
+
+#### **Uso del Frontend Web - Mapa Interactivo**
+
+1. **Iniciar servidores**:
+   ```bash
+   # Terminal 1 - Backend
+   fastapi dev app/main.py
+   
+   # Terminal 2 - Frontend
+   cd Front && python3 serve.py
+   ```
+
+2. **Acceder al mapa**:
+   - Abrir: http://localhost:3000/src/pages/user.html
+   - Login con usuario registrado
+   - Click en "Mapa NBA" en el menú
+   - Explorar los 30 equipos con clima en tiempo real
+
+3. **Interacción**:
+   - Click en cualquier marcador para ver popup con:
+     - Información del equipo
+     - Clima actual de la ciudad
+     - Lista de jugadores del equipo
+   - Zoom y navegación del mapa
+   - Datos actualizados en cada carga
+
+### 🧪 **Pruebas de Expiración de Token**
+
+#### **🍎 macOS / 🐧 Linux:**
+```bash
+# Generar token que expira en 10 segundos
+TEST_TOKEN=$(curl -s -X POST "http://127.0.0.1:8000/api/v1/auth/login-test?expires_in_seconds=10" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test_user", "password": "test123456"}' | \
+  jq -r '.access_token')
+
+# Probar inmediatamente (debería funcionar)
+curl -X GET "http://127.0.0.1:8000/api/v1/players/" \
+  -H "Authorization: Bearer $TEST_TOKEN"
+
+# Esperar 15 segundos
+echo "Esperando 15 segundos para que expire..."
+sleep 15
+
+# Probar de nuevo (debería fallar con 401)
+curl -X GET "http://127.0.0.1:8000/api/v1/players/" \
+  -H "Authorization: Bearer $TEST_TOKEN"
+```
+
+#### **🪟 Windows PowerShell:**
+```powershell
+# Generar token que expira en 10 segundos
+$testLoginBody = @{
+    username = "test_user"
+    password = "test123456"
+} | ConvertTo-Json
+
+$testResponse = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/login-test?expires_in_seconds=10" `
+  -Method POST `
+  -Body $testLoginBody `
+  -ContentType "application/json"
+
+$TEST_TOKEN = $testResponse.access_token
+
+# Probar inmediatamente
+$testHeaders = @{ "Authorization" = "Bearer $TEST_TOKEN" }
+try {
+    $result1 = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/players/" -Headers $testHeaders
+    Write-Host "✅ Token válido" -ForegroundColor Green
+} catch {
+    Write-Host "❌ Token inválido" -ForegroundColor Red
+}
+
+# Esperar y probar de nuevo
+Write-Host "Esperando 15 segundos..."
+Start-Sleep 15
+
+try {
+    $result2 = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/players/" -Headers $testHeaders
+    Write-Host "❌ Token debería haber expirado" -ForegroundColor Red
+} catch {
+    Write-Host "✅ Token expirado correctamente" -ForegroundColor Green
+}
+```
+
+## 📊 Sistema de Logs
+
+### 🎯 **Logs Detallados en Tiempo Real**
+
+El sistema implementa un sistema de logging completo que registra todas las actividades con información detallada del usuario:
+
+### 📋 **Tipos de Logs**
+
+| 🔐 **Autenticación** | 🏀 **Jugadores** | 👥 **Usuarios** | 🌐 **HTTP** |
+|---------------------|------------------|-----------------|-------------|
+| Login exitoso | Listado de jugadores | Consulta de perfil | Requests entrantes |
+| Token expirado | Consulta individual | Búsqueda por username | Respuestas con tiempo |
+| Token inválido | Creación de jugador | Accesos denegados | Códigos de estado |
+
+### 🎨 **Formato de Logs**
+
+```
+🔐 ACCIÓN: El usuario 'test_user' (ID: 1) ha iniciado sesión exitosamente
+🏀 ACCIÓN: El usuario 'test_user' (ID: 1) generó el listado completo de jugadores (skip=0, limit=10) - Total encontrados: 3
+🔍 ACCIÓN: El usuario 'test_user' (ID: 1) consultó los detalles del jugador 'LeBron James' (ID: 1)
+➕ ACCIÓN: El usuario 'test_user' (ID: 1) creó un nuevo jugador: 'Stephen Curry' (Equipo: Golden State Warriors)
+👤 ACCIÓN: El usuario 'test_user' (ID: 1) consultó su propio perfil
+🚫 SEGURIDAD: El usuario 'test_user' (ID: 1) intentó acceder al perfil del usuario ID: 2
+🌐 REQUEST: GET http://127.0.0.1:8000/api/v1/players/ desde IP: 127.0.0.1
+✅ RESPONSE: 200 en 0.045s
+```
+
+### 🔍 **Logs de Seguridad**
+
+El sistema registra automáticamente intentos de acceso no autorizados:
+
+- 🚫 **Acceso denegado**: Intentos de ver perfiles de otros usuarios
+- ❌ **Token inválido**: Uso de tokens expirados o malformados
+- 🕒 **Expiración**: Tokens que han superado su tiempo de vida
+
+### 📈 **Monitoreo en Vivo**
+
+Mientras la API está ejecutándose, puedes ver todos los logs en tiempo real en la consola del servidor:
+
+```bash
+# Iniciar servidor y ver logs
+fastapi dev app/main.py
+
+# En otra terminal, hacer requests para ver los logs
+curl -X GET "http://127.0.0.1:8000/api/v1/players/" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## 🏗️ Arquitectura
+
+### 🔧 **Patrón de Arquitectura en Capas**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    🌐 HTTP Layer (FastAPI)                  │
+│                Controllers + Middleware                     │
+├─────────────────────────────────────────────────────────────┤
+│                   🔐 Security Layer (JWT)                   │
+│              Auth Dependencies + Validation                 │
+├─────────────────────────────────────────────────────────────┤
+│                  🧠 Business Logic Layer                    │
+│                      Services                               │
+├─────────────────────────────────────────────────────────────┤
+│                   💾 Data Access Layer                      │
+│                    Repositories                             │
+├─────────────────────────────────────────────────────────────┤
+│                    🗄️ Database Layer                        │
+│               SQLAlchemy ORM + PostgreSQL                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 📁 **Estructura del Proyecto**
+
+```
+ApIConexionClase/
+├── app/
+│   ├── config/                 # ⚙️ Configuraciones
+│   │   ├── jwt_config.py       # JWT configuración
+│   │   ├── NBA_database.py     # Base de datos
+│   │   ├── logging_config.py   # Sistema de logs
+│   │   └── documentation.py    # Docs automáticas
+│   ├── controllers/            # 🎮 Controladores HTTP
+│   │   ├── Auth_controller.py  # Autenticación
+│   │   ├── NBA_controller.py   # Jugadores
+│   │   ├── NBA_Map_controller.py  # Mapa NBA con clima
+│   │   ├── Role_controller.py  # Roles y permisos
+│   │   └── User_controller.py  # Usuarios
+│   ├── services/               # 🧠 Lógica de negocio
+│   │   ├── Auth_service.py     # Servicios de auth
+│   │   ├── NBA_service.py      # Servicios de jugadores
+│   │   ├── NBA_Map_service.py  # Lógica del mapa NBA
+│   │   ├── Weather_service.py  # Integración OpenWeatherMap
+│   │   ├── Role_service.py     # Servicios de roles
+│   │   └── User_service.py     # Servicios de usuarios
+│   ├── repositories/           # 💾 Acceso a datos
+│   │   ├── NBA_repository.py   # CRUD jugadores
+│   │   ├── Team_repository.py  # CRUD equipos NBA
+│   │   ├── Role_repository.py  # CRUD roles
+│   │   └── User_repository.py  # CRUD usuarios
+│   ├── models/                 # 🗃️ Modelos SQLAlchemy
+│   │   ├── NBA_model.py        # Modelo de jugador
+│   │   ├── Team_model.py       # Modelo de equipo NBA
+│   │   ├── Role_model.py       # Modelo de rol
+│   │   └── User_model.py       # Modelo de usuario
+│   ├── Schema/                 # ✅ Validaciones Pydantic
+│   │   ├── NBA_Schema.py       # Schemas de jugadores
+│   │   ├── Team_Schema.py      # Schemas de equipos
+│   │   ├── Role_Schema.py      # Schemas de roles
+│   │   ├── User_Schema.py      # Schemas de usuarios
+│   │   └── Auth_Schema.py      # Schemas de autenticación
+│   ├── scripts/                # 📜 Scripts de utilidad
+│   │   └── populate_teams.py   # Poblar equipos NBA
+│   ├── dependencies/           # 🔐 Dependencias de seguridad
+│   │   ├── auth_dependencies.py
+│   │   └── permission_dependencies.py
+│   ├── middleware/             # 🔧 Middleware personalizado
+│   │   └── logging_middleware.py
+│   ├── utils/                  # 🛠️ Utilidades
+│   │   └── jwt_utils.py        # Utilidades JWT
+│   └── main.py                 # 🚀 Punto de entrada
+├── Front/                      # 🌐 Frontend Web
+│   ├── assets/
+│   │   ├── js/
+│   │   │   ├── nba-map.js      # Lógica del mapa interactivo
+│   │   │   ├── players.js      # Gestión de jugadores
+│   │   │   ├── auth.js         # Autenticación frontend
+│   │   │   └── api.js          # Cliente API
+│   │   └── css/
+│   │       ├── nba-map.css     # Estilos del mapa
+│   │       └── ...
+│   ├── src/
+│   │   └── pages/
+│   │       ├── user.html       # Dashboard de usuario
+│   │       └── admin.html      # Panel de admin
+│   ├── index.html              # Página principal
+│   ├── login.html              # Página de login
+│   └── serve.py                # Servidor local de desarrollo
+├── requirements.txt            # 📦 Dependencias
+└── README.md                   # 📖 Esta documentación
+```
+
+## 🚀 Instalación
+
+### 📋 **Requisitos del Sistema**
+
+- **Python 3.8+** (Recomendado: 3.11+)
+- **PostgreSQL 12+** o SQLite (fallback automático)
+- **Git** para clonar el repositorio
+
+### 🔧 **Instalación Paso a Paso**
+
+#### **🍎 macOS / 🐧 Linux:**
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/ApIConexionClase.git
+cd ApIConexionClase
+
+# 2. Crear entorno virtual
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Instalar dependencias
+pip install -r requirements.txt
+
+# 4. Configurar variables de entorno (opcional)
+cp .env.example .env  # Si existe
+# Editar .env con tus configuraciones
+
+# 5. Ejecutar la aplicación
+fastapi dev app/main.py
+```
+
+#### **🪟 Windows:**
+
+```cmd
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/ApIConexionClase.git
+cd ApIConexionClase
+
+# 2. Crear entorno virtual
+python -m venv venv
+venv\Scripts\activate
+
+# 3. Instalar dependencias
+pip install -r requirements.txt
+
+# 4. Configurar variables de entorno (opcional)
+copy .env.example .env  # Si existe
+# Editar .env con tus configuraciones
+
+# 5. Ejecutar la aplicación
+fastapi dev app/main.py
+```
+
+### � **Instalación con Docker (Recomendado para Producción)**
+
+Docker simplifica el despliegue y garantiza consistencia entre entornos.
+
+#### **Requisitos**
+- Docker y Docker Compose instalados
+
+#### **Inicio Rápido**
+
+```bash
+# 1. Configurar variables de entorno
+cp .env.example .env
+# Edita .env con tus configuraciones
+
+# 2. Iniciar todos los servicios
+docker-compose up -d
+
+# 3. Ver logs
+docker-compose logs -f api
+```
+
+#### **URLs de Acceso**
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| API | http://localhost:8000 | API principal |
+| Docs | http://localhost:8000/docs | Swagger UI |
+| PostgreSQL | localhost:5432 | Base de datos |
+| PgAdmin | http://localhost:5050 | Admin DB (opcional) |
+
+#### **Comandos Útiles**
+
+```bash
+# Ver estado de servicios
+docker-compose ps
+
+# Detener servicios
+docker-compose down
+
+# Reiniciar con datos limpios
+docker-compose down -v
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f api      # Solo API
+docker-compose logs -f          # Todos
+```
+
+#### **Variables de Entorno**
+
+Configura estas variables en tu archivo `.env`:
+
+```bash
+# PostgreSQL (usuario no-root para seguridad)
+PGUSER=appuser
+PGPASSWORD=tu_password_seguro
+PGDATABASE=railway
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=admin_password
+
+# JWT
+JWT_SECRET_KEY=tu_clave_secreta_jwt
+
+# Opcional
+PORT=8000
+```
+
+> 📖 **Más información**: Ver [DOCKER_GUIDE.md](./DOCKER_GUIDE.md) para documentación completa
+
+### �🔗 **Accesos Rápidos**
+
+Una vez iniciada la aplicación:
+
+| 🌐 **Servicio** | 🔗 **URL** | 📝 **Descripción** |
+|----------------|------------|-------------------|
+| API Principal | http://127.0.0.1:8000 | Endpoint principal |
+| Health Check | http://127.0.0.1:8000/health | Estado del sistema |
+| Swagger UI | http://127.0.0.1:8000/docs | Documentación interactiva |
+| Scalar Docs | http://127.0.0.1:8000/scalar | Documentación moderna |
+
+## 📖 Documentación Interactiva
+
+### 🎮 **Interfaces Disponibles**
+
+| 📊 **Swagger UI** | 🎨 **Scalar** |
+|-------------------|---------------|
+| Interface clásica de OpenAPI | Interface moderna y elegante |
+| Ideal para desarrollo | Ideal para presentaciones |
+| `http://127.0.0.1:8000/docs` | `http://127.0.0.1:8000/scalar` |
+
+### 🧪 **Probar la API desde el Navegador**
+
+1. **Ir a Swagger UI**: http://127.0.0.1:8000/docs
+2. **Registrar usuario**: Usar el endpoint `POST /auth/register`
+3. **Hacer login**: Usar `POST /auth/login` y copiar el token
+4. **Autorizar**: Hacer clic en "Authorize" y pegar el token
+5. **Probar endpoints**: Todos los endpoints protegidos estarán disponibles
+
+### 🔐 **Autenticación en Swagger**
+
+```bash
+# En Swagger UI, botón "Authorize":
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+## 📝 Ejemplos de Respuestas
+
+### 🏀 **Jugadores**
+
+#### **Lista de Jugadores:**
+```json
+[
+  {
+    "id": 1,
+    "name": "LeBron James",
+    "team": "Los Angeles Lakers",
+    "position": "Small Forward",
+    "height_m": 2.06,
+    "weight_kg": 113.4,
+    "birth_date": "1984-12-30T00:00:00",
+    "created_at": "2025-10-07T10:30:00"
+  },
+  {
+    "id": 2,
+    "name": "Stephen Curry",
+    "team": "Golden State Warriors",
+    "position": "Point Guard",
+    "height_m": 1.91,
+    "weight_kg": 84.0,
+    "birth_date": "1988-03-14T00:00:00",
+    "created_at": "2025-10-07T10:31:00"
+  }
+]
+```
+
+#### **Jugador Individual:**
+```json
+{
+  "id": 1,
+  "name": "LeBron James",
+  "team": "Los Angeles Lakers",
+  "position": "Small Forward",
+  "height_m": 2.06,
+  "weight_kg": 113.4,
+  "birth_date": "1984-12-30T00:00:00",
+  "created_at": "2025-10-07T10:30:00"
+}
+```
+
+### 👥 **Usuario**
+
+#### **Mi Perfil:**
+```json
+{
+  "id": 1,
+  "username": "mi_usuario",
+  "created_at": "2025-10-07T09:15:00"
+}
+```
+
+### ❌ **Errores**
+
+#### **Token Expirado (401):**
+```json
+{
+  "detail": "Token inválido o expirado"
+}
+```
+
+#### **Acceso Denegado (403):**
+```json
+{
+  "detail": "No tienes permisos para ver el perfil de otros usuarios"
+}
+```
+
+#### **Recurso No Encontrado (404):**
+```json
+{
+  "detail": "Jugador con ID 999 no encontrado"
+}
+```
+
+#### **Validación Fallida (422):**
+```json
+{
+  "detail": [
+    {
+      "type": "value_error",
+      "loc": ["body", "height_m"],
+      "msg": "La altura debe estar entre 1.0 y 3.0 metros",
+      "input": 0.5
+    }
+  ]
+}
+```
+
+## 🛠️ Stack Tecnológico
+
+### 🚀 **Backend**
+
+| 🔧 **Tecnología** | 📖 **Versión** | 🎯 **Propósito** |
+|-------------------|----------------|------------------|
+| **FastAPI** | 0.104.1+ | Framework web moderno y rápido |
+| **Python** | 3.8+ | Lenguaje de programación |
+| **SQLAlchemy** | 2.0+ | ORM para base de datos |
+| **PostgreSQL** | 12+ | Base de datos principal |
+| **Pydantic** | 2.0+ | Validación de datos |
+| **JWT** | - | Autenticación stateless |
+| **httpx** | - | Cliente HTTP asíncrono para APIs externas |
+
+### 🌐 **APIs Externas**
+
+| 🌍 **API** | 🎯 **Uso** | 📝 **Descripción** |
+|-----------|-----------|-------------------|
+| **OpenWeatherMap** | Datos meteorológicos | Clima en tiempo real para ciudades NBA (temperatura, humedad, viento) |
+
+### 🗺️ **Frontend - Mapa Interactivo**
+
+| 🔧 **Tecnología** | 📖 **Versión** | 🎯 **Propósito** |
+|-------------------|----------------|------------------|
+| **Leaflet.js** | 1.9.4 | Biblioteca de mapas interactivos |
+| **OpenStreetMap** | - | Tiles de mapas gratuitos |
+| **Vanilla JavaScript** | ES6+ | Lógica del frontend |
+| **CSS3** | - | Estilos modernos y responsive |
+
+### 🔐 **Seguridad**
+
+| 🛡️ **Componente** | 📝 **Descripción** |
+|-------------------|-------------------|
+| **JWT Tokens** | Autenticación sin estado |
+| **Bcrypt** | Hasheo seguro de contraseñas |
+| **CORS** | Control de acceso entre dominios |
+| **Validation** | Validación estricta de entrada |
+
+### 📊 **Monitoreo y Logs**
+
+| 📈 **Herramienta** | 🎯 **Función** |
+|-------------------|----------------|
+| **Logging** | Sistema de logs personalizado |
+| **Health Checks** | Monitoreo de estado |
+| **Request Tracking** | Seguimiento de peticiones |
+| **Security Audit** | Auditoría de seguridad |
+
+## 🔧 Variables de Entorno
+
+### 📋 **Configuración Opcional**
+
+Crea un archivo `.env` en la raíz del proyecto:
+
+```bash
+# JWT Configuration
+JWT_SECRET_KEY=tu_clave_secreta_super_segura_aqui
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRES=3600
+
+# Database Configuration (PostgreSQL)
+user=tu_usuario_postgres
+password=tu_password_postgres
+host=localhost
+db_port=5432
+dbname=nba_api
+
+# Application Configuration
+DEBUG=False
+API_VERSION=v1
+```
+
+### 🎯 **Valores por Defecto**
+
+Si no configuras variables de entorno, la aplicación usará:
+
+- **Base de datos**: SQLite local (`test_local.db`)
+- **JWT Secret**: Clave por defecto (cambiar en producción)
+- **Token expiration**: 1 hora (3600 segundos)
+
+## 🚀 Deployment
+
+### 🌐 **Producción**
+
+#### **Docker (Recomendado):**
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+#### **Render/Railway/Heroku:**
+
+```bash
+# Procfile
+web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+### 🔒 **Consideraciones de Seguridad**
+
+1. **JWT Secret**: Usar una clave segura y aleatoria
+2. **HTTPS**: Obligatorio en producción
+3. **CORS**: Configurar dominios permitidos específicos
+4. **Rate Limiting**: Implementar límites de peticiones
+5. **Database**: Usar PostgreSQL con conexiones SSL
+
+## 🤝 Contribución
+
+### 🛠️ **Cómo Contribuir**
+
+1. **Fork** el repositorio
+2. **Crea** una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. **Commit** tus cambios (`git commit -m 'Add: nueva funcionalidad'`)
+4. **Push** a la rama (`git push origin feature/nueva-funcionalidad`)
+5. **Abre** un Pull Request
+
+### 📝 **Estándares de Código**
+
+- **PEP 8** para Python
+- **Type hints** obligatorios
+- **Docstrings** en funciones públicas
+- **Tests** para nuevas funcionalidades
+
+### 🧪 **Testing**
+
+```bash
+# Ejecutar tests
+pytest
+
+# Con cobertura
+pytest --cov=app tests/
+```
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
+
+## 📞 Soporte
+
+### 🆘 **¿Necesitas Ayuda?**
+
+- 📧 **Email**: soporte@nba-api.com
+- 🐛 **Issues**: [GitHub Issues](https://github.com/tu-usuario/ApIConexionClase/issues)
+- 📖 **Docs**: [Documentación Completa](http://127.0.0.1:8000/docs)
+
+### 🎯 **FAQ**
+
+<details>
+<summary><strong>¿Cómo reseteo mi contraseña?</strong></summary>
+
+Actualmente no hay endpoint de reset. Contacta al administrador o registra un nuevo usuario.
+</details>
+
+<details>
+<summary><strong>¿Por qué mi token expira?</strong></summary>
+
+Los tokens JWT expiran por seguridad (1 hora por defecto). Simplemente haz login nuevamente para obtener uno nuevo.
+</details>
+
+<details>
+<summary><strong>¿Puedo ver otros usuarios?</strong></summary>
+
+No, por privacidad solo puedes ver tu propio perfil. Esto es una característica de seguridad.
+</details>
+
+---
+
+<div align="center">
+
+**⭐ Si te gusta este proyecto, ¡dale una estrella! ⭐**
+
+Desarrollado con ❤️ por [Tu Nombre]
+
+</div>
 | 🚫 Arquitectura monolítica difícil de mantener | ✅ Arquitectura en capas modular | 🔧 +200% facilidad de mantenimiento |
 | 🚫 Escalabilidad limitada | ✅ PostgreSQL + paginación inteligente | ⚡ Manejo de millones de registros |
 

@@ -1,0 +1,39 @@
+# ================================
+# Docker Compose para PRODUCCIÓN
+# Solo la API (Railway maneja la BD)
+# ================================
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILD_ENV=production
+    container_name: nba-api-prod
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    environment:
+      # Variables de entorno de producción
+      - PORT=${PORT:-8000}
+      - user=${user}
+      - password=${password}
+      - host=${host}
+      - db_port=${db_port:-5432}
+      - dbname=${dbname}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - PYTHONUNBUFFERED=1
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8000}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

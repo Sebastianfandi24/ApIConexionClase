@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.repositories.User_repository import UserRepository
 from app.models.User_model import User
-import hashlib
+from app.utils.jwt_utils import jwt_manager
 
 
 """
@@ -9,7 +9,7 @@ Librerías utilizadas:
 - repositories.User_repository: Proporciona la clase UserRepository para la gestión de usuarios en la base de datos.
 - models.User_model: Define el modelo User que representa a un usuario del sistema.
 - sqlalchemy.orm.Session: Permite manejar la sesión de la base de datos para realizar operaciones transaccionales.
-- hashlib: Para hashear contraseñas de forma segura.
+- utils.jwt_utils: Para hashear contraseñas de forma segura usando bcrypt.
 """
 
 
@@ -26,8 +26,8 @@ class UserService:
         self.repository = UserRepository(db_session)
 
     def _hash_password(self, password: str) -> str:
-        """Hashea una contraseña usando SHA-256"""
-        return hashlib.sha256(password.encode()).hexdigest()
+        """Hashea una contraseña usando bcrypt a través del jwt_manager"""
+        return jwt_manager.get_password_hash(password)
 
     def listar_usuarios(self, skip: int = 0, limit: int = 100):
         """
@@ -50,12 +50,13 @@ class UserService:
         """
         return self.repository.get_user_by_username(username)
 
-    def crear_usuario(self, username: str, password: str):
+    def crear_usuario(self, username: str, password: str, role_id: int = 2):
         """
         Crea un nuevo usuario con validaciones de negocio:
         - Username único y no vacío.
         - Password no vacío y con longitud mínima.
         - Password se hashea antes de almacenar.
+        - role_id por defecto es 2 (user).
         """
         # Validaciones de negocio
         if not username or username.strip() == "":
@@ -84,17 +85,19 @@ class UserService:
         # Crear el usuario
         new_user = User(
             username=username,
-            password=hashed_password
+            password=hashed_password,
+            role_id=role_id
         )
 
         return self.repository.create_user(new_user)
 
-    def actualizar_usuario(self, user_id: int, username: str = None, password: str = None):
+    def actualizar_usuario(self, user_id: int, username: str = None, password: str = None, role_id: int = None):
         """
         Actualiza un usuario existente con validaciones:
         - Usuario debe existir.
         - Si se proporciona username, debe ser único.
         - Si se proporciona password, se hashea antes de almacenar.
+        - Si se proporciona role_id, se actualiza el rol.
         """
         user = self.repository.get_user_by_id(user_id)
         if not user:
@@ -128,6 +131,10 @@ class UserService:
             
             # Hashear la nueva contraseña
             user.password = self._hash_password(password)
+
+        # Actualizar role_id si se proporciona
+        if role_id is not None:
+            user.role_id = role_id
 
         return self.repository.update_user(user)
 

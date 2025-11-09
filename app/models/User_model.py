@@ -2,13 +2,15 @@
 # - datetime: para manejar fechas y tiempos (ej. created_at).
 # - sqlalchemy: proporciona herramientas para definir modelos de bases de datos mediante ORM.
 #   - Column: define columnas de la tabla.
-#   - String, Integer, DateTime: tipos de datos que se pueden usar en columnas.
-# - sqlalchemy.orm:
-#   - declarative_base: se usa para crear una clase base de la cual heredan los modelos ORM.
+#   - String, Integer, DateTime, Boolean: tipos de datos que se pueden usar en columnas.
+#   - ForeignKey: define relaciones entre tablas.
+# - app.config.NBA_database:
+#   - Base: clase base declarativa de SQLAlchemy de la cual heredan todos los modelos ORM.
 
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime
-from app.models.NBA_model import Base
+from sqlalchemy import Column, String, Integer, DateTime, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
+from app.config.NBA_database import Base
 
 """
 La clase User representa un usuario del sistema.
@@ -33,8 +35,20 @@ class User(Base):
     # Contraseña del usuario (se almacenará hasheada).
     password = Column(String(255), nullable=False)
 
+    # Relación con roles (Foreign Key)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, default=2)  # 2 = user por defecto
+
+    # Estado activo del usuario (para poder habilitar/deshabilitar usuarios).
+    is_active = Column(Boolean, default=True, nullable=False)
+
     # Fecha y hora de creación del registro.
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    # Fecha y hora de última actualización del registro.
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relación con el modelo Role
+    role = relationship("Role", back_populates="users")
+
     def __repr__(self):
-        return f"<User(id={self.id}, username='{self.username}', created_at='{self.created_at}')>"
+        return f"<User(id={self.id}, username='{self.username}', role_id={self.role_id}, is_active={self.is_active}, created_at='{self.created_at}')>"

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Manager - Login</title>
+    <link rel="stylesheet" href="assets/css/login.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">
+                    <i class="fas fa-basketball-ball"></i>
+                </div>
+                <h1>NBA Manager</h1>
+                <p>Sistema de Gestión de Jugadores</p>
+            </div>
+
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i>
+                        Usuario
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Ingresa tu usuario"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i>
+                        Contraseña
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Ingresa tu contraseña"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            <div id="loading" class="loading" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                Iniciando sesión...
+            </div>
+
+            <div class="login-footer">
+                <div class="demo-credentials">
+                    <p><strong>Credenciales de prueba:</strong></p>
+                    <div class="credentials-grid">
+                        <div class="credential-item admin">
+                            <i class="fas fa-user-shield"></i>
+                            <span><strong>Admin:</strong> admin123 / admin123</span>
+                        </div>
+                        <div class="credential-item user">
+                            <i class="fas fa-user"></i>
+                            <span><strong>User:</strong> user123 / user123</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="background-animation">
+            <div class="basketball-icon"><i class="fas fa-basketball-ball"></i></div>
+            <div class="basketball-icon"><i class="fas fa-basketball-ball"></i></div>
+            <div class="basketball-icon"><i class="fas fa-basketball-ball"></i></div>
+        </div>
+    </div>
+
+    <script type="module">
+        const API_URL = 'http://localhost:8000/api/v1';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
+            const loadingDiv = document.getElementById('loading');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            // Mostrar loading
+            loadingDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Error al iniciar sesión');
+                }
+
+                // Guardar solo el token primero
+                localStorage.setItem('token', data.access_token);
+
+                // Obtener información completa del usuario con su rol
+                const userResponse = await fetch(`${API_URL}/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${data.access_token}`
+                    }
+                });
+
+                if (!userResponse.ok) {
+                    throw new Error('Error al obtener información del usuario');
+                }
+
+                const userData = await userResponse.json();
+                localStorage.setItem('user', JSON.stringify(userData));
+
+                // Redirigir según el rol
+                if (userData.role_id === 1) {
+                    // Admin
+                    window.location.href = 'src/pages/admin.html';
+                } else {
+                    // Usuario regular
+                    window.location.href = 'src/pages/user.html';
+                }
+
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Verificar si ya hay sesión activa
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                const userData = JSON.parse(user);
+                if (userData.role_id === 1) {
+                    window.location.href = 'src/pages/admin.html';
+                } else {
+                    window.location.href = 'src/pages/user.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -7,65 +7,113 @@
 # - Garantizar la compatibilidad y reproducibilidad del entorno de desarrollo y producción
 # - Facilitar la colaboración entre desarrolladores y la integración continua
 
-# Core dependencies
-annotated-types==0.7.0
-anyio==4.10.0
-certifi==2025.8.3
-click==8.2.1
-dnspython==2.7.0
-email_validator==2.2.0
-
-# FastAPI and related
-fastapi==0.116.1
-fastapi-cli==0.0.8
+# =============================================
+# CORE DEPENDENCIES - FastAPI y servidor web
+# =============================================
+fastapi==0.118.0
+fastapi-cli==0.0.13
 fastapi-cloud-cli==0.1.5
-scalar-fastapi==1.0.18
+scalar-fastapi==1.4.3
+uvicorn==0.37.0
+uvloop==0.21.0
+starlette==0.48.0
 
-# Database
-psycopg2-binary==2.9.10
+# =============================================
+# DATABASE - PostgreSQL y ORM
+# =============================================
 SQLAlchemy==2.0.43
+psycopg2-binary==2.9.10
 greenlet==3.2.4
 
-# HTTP and web
-h11==0.16.0
-httpcore==1.0.9
-httptools==0.6.4
-httpx==0.28.1
-idna==3.10
-starlette==0.47.3
+# =============================================
+# SECURITY - JWT y autenticación
+# =============================================
+python-jose==3.3.0
+passlib==1.7.4
+bcrypt==4.1.3
+cryptography==46.0.2
 
-# Template and markdown
-Jinja2==3.1.6
-MarkupSafe==3.0.2
-markdown-it-py==4.0.0
-mdurl==0.1.2
-
-# Data validation
+# =============================================
+# DATA VALIDATION - Pydantic y validaciones
+# =============================================
 pydantic==2.11.7
 pydantic_core==2.33.2
+email-validator==2.3.0
+annotated-types==0.7.0
 
-# CLI and utilities
-Pygments==2.19.2
+# =============================================
+# HTTP CLIENT - Para pruebas y requests
+# =============================================
+httpx==0.28.1
+httpcore==1.0.9
+httptools==0.6.4
+requests==2.32.5
+h11==0.16.0
+
+# =============================================
+# ENVIRONMENT - Variables de entorno y config
+# =============================================
 python-dotenv==1.1.1
 python-multipart==0.0.20
-PyYAML==6.0.2
+
+# =============================================
+# CLI y UTILITIES - Herramientas de línea de comandos
+# =============================================
+click==8.3.0
+typer==0.19.2
 rich==14.1.0
 rich-toolkit==0.15.0
-rignore==0.6.4
 shellingham==1.5.4
-typer==0.16.1
 
-# Monitoring and error tracking
-sentry-sdk==2.35.0
+# =============================================
+# TEMPLATES y DOCUMENTATION - Para documentación
+# =============================================
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+markdown-it-py==4.0.0
+mdurl==0.1.2
+Pygments==2.19.2
 
-# Async and networking
+# =============================================
+# MONITORING - Error tracking y monitoreo
+# =============================================
+sentry-sdk==2.40.0
+
+# =============================================
+# ASYNC y NETWORKING - Soporte asíncrono
+# =============================================
+anyio==4.11.0
 sniffio==1.3.1
-typing-inspection==0.4.1
-typing_extensions==4.15.0
-urllib3==2.5.0
-
-# Server
-uvicorn==0.35.0
-uvloop==0.21.0
-watchfiles==1.1.0
 websockets==15.0.1
+watchfiles==1.1.0
+
+# =============================================
+# CRYPTOGRAPHY y SECURITY - Dependencias criptográficas
+# =============================================
+cffi==2.0.0
+pycparser==2.23
+ecdsa==0.19.1
+pyasn1==0.6.1
+rsa==4.9.1
+six==1.17.0
+
+# =============================================
+# SYSTEM y UTILITIES - Utilidades del sistema
+# =============================================
+certifi==2025.10.5
+charset-normalizer==3.4.3
+dnspython==2.8.0
+idna==3.10
+urllib3==2.5.0
+typing_extensions==4.15.0
+typing-inspection==0.4.1
+PyYAML==6.0.3
+packaging==25.0
+rignore==0.6.4
+
+# =============================================
+# TESTING - Herramientas de testing (desarrollo)
+# =============================================
+pytest==8.4.1
+iniconfig==2.1.0
+pluggy==1.6.0

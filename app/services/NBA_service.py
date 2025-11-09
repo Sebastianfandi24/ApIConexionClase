@@ -76,7 +76,7 @@ class PlayerService:
 
         return self.repository.create_player(new_player)
 
-    def actualizar_jugador(self, player_id: int, **kwargs):
+    def actualizar_jugador(self, player_id: int, update_data: dict):
         """
         Actualiza los datos de un jugador existente.
         Aplica validaciones de negocio según los campos recibidos.
@@ -85,29 +85,29 @@ class PlayerService:
         if not player:
             raise ValueError(f"No se encontró un jugador con ID {player_id}")
 
-        if "name" in kwargs and not kwargs["name"].strip():
+        if "name" in update_data and not update_data["name"].strip():
             raise ValueError("El nombre del jugador no puede estar vacío")
-        if "team" in kwargs and not kwargs["team"].strip():
+        if "team" in update_data and not update_data["team"].strip():
             raise ValueError("El equipo no puede estar vacío")
-        if "height_m" in kwargs and kwargs["height_m"] <= 0:
+        if "height_m" in update_data and update_data["height_m"] <= 0:
             raise ValueError("La altura debe ser mayor a 0")
-        if "weight_kg" in kwargs and kwargs["weight_kg"] <= 0:
+        if "weight_kg" in update_data and update_data["weight_kg"] <= 0:
             raise ValueError("El peso debe ser mayor a 0")
-            if "birth_date" in kwargs:
-                birth_date = kwargs["birth_date"]
-                if hasattr(birth_date, "date"):
-                    birth_date = birth_date.date()
-                if birth_date > date.today():
-                    raise ValueError("La fecha de nacimiento no puede estar en el futuro")
-                kwargs["birth_date"] = birth_date
+        if "birth_date" in update_data:
+            birth_date = update_data["birth_date"]
+            if hasattr(birth_date, "date"):
+                birth_date = birth_date.date()
+            if birth_date > date.today():
+                raise ValueError("La fecha de nacimiento no puede estar en el futuro")
+            update_data["birth_date"] = birth_date
 
         # Aplicar cambios
-        for key, value in kwargs.items():
+        for key, value in update_data.items():
             setattr(player, key, value)
 
         return self.repository.update_player(player)
 
-    def eliminar_jugador(self, player_id: str):
+    def eliminar_jugador(self, player_id: int):
         """
         Elimina un jugador existente según su ID.
         Lanza un error si no se encuentra.
@@ -136,15 +136,22 @@ def crear_jugador(db, player):
     )
 
 def actualizar_jugador(db, player_id: int, player):
-    return PlayerService(db).actualizar_jugador(
-        player_id,
-        name=player.name,
-        team=player.team,
-        position=player.position,
-        height_m=player.height_m,
-        weight_kg=player.weight_kg,
-        birth_date=player.birth_date
-    )
+    # Convertir el objeto player a diccionario solo con campos no None
+    update_data = {}
+    if player.name is not None:
+        update_data["name"] = player.name
+    if player.team is not None:
+        update_data["team"] = player.team
+    if player.position is not None:
+        update_data["position"] = player.position
+    if player.height_m is not None:
+        update_data["height_m"] = player.height_m
+    if player.weight_kg is not None:
+        update_data["weight_kg"] = player.weight_kg
+    if player.birth_date is not None:
+        update_data["birth_date"] = player.birth_date
+    
+    return PlayerService(db).actualizar_jugador(player_id, update_data)
 
 def eliminar_jugador(db, player_id: int):
     return PlayerService(db).eliminar_jugador(player_id)

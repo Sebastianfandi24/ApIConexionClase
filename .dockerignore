@@ -1,0 +1,111 @@
+# ================================
+# .dockerignore
+# Archivos y carpetas a excluir del contexto de Docker
+# ================================
+
+# Entorno virtual de Python
+.venv/
+venv/
+env/
+ENV/
+.virtualenv/
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Variables de entorno (IMPORTANTE: no incluir en imagen)
+.env
+.env.local
+.env.*.local
+
+# Pytest y cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Documentación local
+*.md
+docs/
+README.md
+DOCKER_GUIDE.md
+
+# Logs
+*.log
+logs/
+
+# Base de datos local (SQLite)
+*.db
+*.sqlite
+*.sqlite3
+test_local.db
+
+# Archivos temporales
+tmp/
+temp/
+*.tmp
+
+# Node modules (si hubiera frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Archivos de sistema
+Thumbs.db
+.DS_Store
+
+# Testing
+tests/
+test_*.py
+*_test.py
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Static files (si se generan)
+staticfiles/
+media/
+
+# Front (si existe separado)
+Front/
+
+# Otros
+.pylintrc
+.flake8
+mypy.ini
+pytest.ini
+setup.py
+setup.cfg

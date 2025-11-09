@@ -3,9 +3,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.NBA_model import Base
 from app.models.User_model import User  # Importar modelo User
+from app.models.Role_model import Role  # Importar modelo Role
 from app.config.NBA_database import engine
 from app.controllers.NBA_controller import router as nba_router
 from app.controllers.User_controller import router as user_router
+from app.controllers.Auth_controller import router as auth_router
+from app.controllers.Role_controller import router as role_router
+from app.controllers.NBA_Map_controller import router as nba_map_router  # Router del mapa NBA
 from app.config.documentation import (
     TAGS_METADATA, 
     CONTACT_INFO, 
@@ -14,29 +18,31 @@ from app.config.documentation import (
 )
 from scalar_fastapi import get_scalar_api_reference
 import logging
+from app.config.logging_config import setup_nba_logging
+from app.middleware.logging_middleware import LoggingMiddleware
 
-# Configuración de logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configuración de logging mejorada
+logger = setup_nba_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("🚀 Iniciando aplicación...")
+    logger.info("🚀 ACCIÓN: Iniciando aplicación NBA API...")
 
     # La conexión se verifica automáticamente al crear el engine
 
     # Crear tablas si no existen
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("✅ Tablas verificadas/creadas correctamente")
+        logger.info("✅ ACCIÓN: Tablas de base de datos verificadas/creadas correctamente")
     except Exception as e:
         logger.error(f"❌ Error al crear tablas: {e}")
 
+    logger.info("🎯 ACCIÓN: NBA API lista para recibir peticiones en http://127.0.0.1:8000")
     yield
 
     # Shutdown
-    logger.info("⏹️ Cerrando aplicación...")
+    logger.info("⏹️ ACCIÓN: Cerrando aplicación NBA API...")
 
 # Configuración de la aplicación FastAPI
 app = FastAPI(
@@ -92,6 +98,9 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
+# Middleware de logging personalizado
+app.add_middleware(LoggingMiddleware)
+
 # Middleware CORS (si se conecta con frontend)
 app.add_middleware(
     CORSMiddleware,
@@ -102,8 +111,11 @@ app.add_middleware(
 )
 
 # Incluir routers
-app.include_router(nba_router, prefix="/api/v1")
-app.include_router(user_router, prefix="/api/v1")
+app.include_router(auth_router)     # Router de autenticación (login, register)
+app.include_router(nba_router)      # Router de jugadores NBA
+app.include_router(user_router)     # Router de usuarios
+app.include_router(role_router)     # Router de roles (solo admins)
+app.include_router(nba_map_router)  # Router del mapa interactivo NBA
 
 # Configurar Scalar para documentación de API
 @app.get("/scalar", include_in_schema=False)

@@ -1,29 +1,32 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-import re
+from typing import List
 
 from app.config.NBA_database import get_db
-from app.services.User_service import (
-    listar_usuarios,
-    obtener_usuario,
-    obtener_usuario_por_username,
-    crear_usuario,
-    actualizar_usuario,
-    eliminar_usuario
-)
+from app.services.User_service import UserService
 from app.Schema.User_Schema import (
     UserCreate, 
     UserUpdate, 
     UserResponse, 
+    UserAdminResponse,
     MessageResponse, 
     ErrorResponse
 )
+from app.dependencies.auth_dependencies import get_current_user
+from app.dependencies.permission_dependencies import can_manage_users, is_admin
+from app.models.User_model import User
+import logging
 
+logger = logging.getLogger('nba_api.controllers.user')
 
+# Router para endpoints de usuarios (TODOS PROTEGIDOS CON JWT)
 router = APIRouter(
-    prefix="/users",
+    prefix="/api/v1/users",
     tags=["Users"],
     responses={
+        401: {"description": "No autorizado - Token JWT requerido"},
+        403: {"description": "Prohibido"},
         404: {"model": ErrorResponse, "description": "Usuario no encontrado"},
         400: {"model": ErrorResponse, "description": "Datos inválidos"},
         500: {"model": ErrorResponse, "description": "Error interno del servidor"}
@@ -32,102 +35,27 @@ router = APIRouter(
 
 
 # -------------------------------
-# Helper → Validación de user_id
-# -------------------------------
-def validar_id(user_id: str):
-    if not re.match(r"^[0-9]+$", user_id):
-        raise HTTPException(
-            status_code=400,
-            detail="El ID del usuario debe ser un número válido."
-        )
-
-
-# -------------------------------
-# GET /users → Listar usuarios
+# GET /users/me → Obtener mi perfil (PROTEGIDO)
 # -------------------------------
 @router.get(
-    "/",
-    response_model=list[UserResponse],
-    summary="Obtener lista de usuarios",
-    description="""
-    **Obtiene una lista paginada de todos los usuarios registrados en el sistema.**
-    
-    ### Parámetros de consulta:
-    - **skip**: Número de registros a omitir (para paginación)
-    - **limit**: Máximo número de registros a retornar (1-100)
-    
-    ### Casos de uso:
-    - Mostrar todos los usuarios en una interfaz de administración
-    - Implementar paginación en aplicaciones frontend
-    - Obtener datos para análisis masivo
-    """,
-    responses={
-        200: {
-            "description": "Lista de usuarios obtenida exitosamente",
-            "content": {
-                "application/json": {
-                    "example": [
-                        {
-                            "id": 1,
-                            "username": "john_doe123",
-                            "created_at": "2024-01-01T00:00:00"
-                        }
-                    ]
-                }
-            }
-        }
-    }
-)
-def get_users(
-    skip: int = Query(
-        0, 
-        ge=0, 
-        description="Número de registros a saltar para paginación",
-        example=0
-    ),
-    limit: int = Query(
-        50, 
-        ge=1, 
-        le=100, 
-        description="Máximo número de usuarios a retornar",
-        example=10
-    ),
-    db: Session = Depends(get_db)
-):
-    """
-    Endpoint para obtener una lista paginada de usuarios.
-    """
-    try:
-        users = listar_usuarios(db, skip=skip, limit=limit)
-        return users
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
-        )
-
-
-# -------------------------------
-# GET /users/{user_id} → Obtener usuario por ID
-# -------------------------------
-@router.get(
-    "/{user_id}",
+    "/me",
     response_model=UserResponse,
-    summary="Obtener usuario por ID",
+    summary="Obtener mi perfil",
     description="""
-    **Obtiene un usuario específico mediante su identificador único.**
+    **Obtiene el perfil del usuario autenticado.**
     
-    ### Parámetros:
-    - **user_id**: Identificador numérico del usuario
+    ### Seguridad:
+    - Solo puedes ver tu propio perfil
+    - Requiere token JWT válido
     
     ### Casos de uso:
-    - Mostrar perfil de usuario
-    - Obtener detalles específicos de un usuario
-    - Validar existencia de usuario
+    - Mostrar información del perfil del usuario logueado
+    - Verificar datos personales
+    - Obtener ID del usuario actual
     """,
     responses={
         200: {
-            "description": "Usuario encontrado exitosamente",
+            "description": "Perfil obtenido exitosamente",
             "content": {
                 "application/json": {
                     "example": {
@@ -137,83 +65,262 @@ def get_users(
                     }
                 }
             }
-        },
-        404: {
-            "description": "Usuario no encontrado",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Usuario con ID 999 no encontrado"}
-                }
-            }
         }
     }
 )
-def get_user(user_id: int, db: Session = Depends(get_db)):
+def get_my_profile(
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    db: Session = Depends(get_db)
+):
     """
-    Endpoint para obtener un usuario específico por su ID.
+    GET /users/me
+    Obtiene el perfil del usuario autenticado (SOLO SU PROPIO PERFIL)
+    Requiere token JWT válido.
     """
     try:
-        user = obtener_usuario(db, user_id=user_id)
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Usuario con ID {user_id} no encontrado"
-            )
-        return user
-    except HTTPException:
-        raise
+        # Log detallado con información del usuario
+        logger.info(f"📋 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil")
+        
+        # Devolver toda la información del usuario incluyendo role_id
+        return UserResponse(
+            id=current_user.id,
+            username=current_user.username,
+            role_id=current_user.role_id,
+            role=current_user.role,
+            created_at=current_user.created_at
+        )
+        
     except Exception as e:
+        logger.error(f"Error al obtener perfil: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            detail="Error interno del servidor"
         )
 
 
 # -------------------------------
-# GET /users/username/{username} → Obtener usuario por username
+# GET /users/all → Listar todos los usuarios (SOLO ADMIN)
 # -------------------------------
 @router.get(
-    "/username/{username}",
-    response_model=UserResponse,
-    summary="Obtener usuario por nombre de usuario",
+    "/all",
+    response_model=List[UserAdminResponse],
+    summary="Listar todos los usuarios (Solo Admin)",
     description="""
-    **Obtiene un usuario específico mediante su nombre de usuario.**
+    **Obtiene la lista completa de todos los usuarios del sistema con información sensible.**
     
-    ### Parámetros:
-    - **username**: Nombre de usuario único
+    ### Seguridad:
+    - Solo administradores pueden acceder a este endpoint
+    - Incluye contraseñas hasheadas y toda la información del usuario
+    - Requiere permiso can_manage_users
     
     ### Casos de uso:
-    - Buscar usuario por nombre de usuario
-    - Validar disponibilidad de username
-    - Autenticación y login
+    - Panel de administración de usuarios
+    - Auditoría del sistema
+    - Gestión de cuentas
     """,
     responses={
         200: {
-            "description": "Usuario encontrado exitosamente"
+            "description": "Lista de usuarios obtenida exitosamente",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": 1,
+                            "username": "admin123",
+                            "password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYIGI5Jq/Oy",
+                            "role_id": 1,
+                            "is_active": True,
+                            "created_at": "2024-01-01T00:00:00"
+                        }
+                    ]
+                }
+            }
+        },
+        403: {
+            "description": "No tienes permisos de administrador"
+        }
+    }
+)
+def get_all_users(
+    current_user: User = Depends(can_manage_users),  # ← Solo admin
+    db: Session = Depends(get_db)
+):
+    """
+    GET /users/all
+    Lista todos los usuarios del sistema con información completa (SOLO ADMIN)
+    Incluye contraseñas hasheadas.
+    Requiere permiso can_manage_users.
+    """
+    try:
+        service = UserService(db)
+        users = service.listar_usuarios()
+        
+        # Log detallado
+        logger.info(f"👥 ACCIÓN: El admin '{current_user.username}' (ID: {current_user.id}) consultó la lista completa de usuarios - Total: {len(users)}")
+        
+        # Convertir a UserAdminResponse incluyendo password
+        return [
+            UserAdminResponse(
+                id=user.id,
+                username=user.username,
+                password=user.password,  # Incluir password hasheado
+                role_id=user.role_id,
+                role=user.role,
+                is_active=user.is_active,
+                created_at=user.created_at
+            )
+            for user in users
+        ]
+        
+    except Exception as e:
+        logger.error(f"Error al listar usuarios: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
+
+# -------------------------------
+# GET /users/{user_id} → Solo permite ver tu propio perfil por ID
+# -------------------------------
+@router.get(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Obtener usuario por ID (solo tu propio perfil)",
+    description="""
+    **Obtiene la información de un usuario por ID, pero solo si es tu propio perfil.**
+    
+    ### Seguridad:
+    - Solo puedes consultar tu propio ID de usuario
+    - Si intentas ver otro ID, recibirás un error 403 Forbidden
+    
+    ### Parámetros:
+    - **user_id**: Tu propio ID de usuario
+    """,
+    responses={
+        200: {
+            "description": "Tu perfil encontrado exitosamente"
+        },
+        403: {
+            "description": "No puedes ver el perfil de otros usuarios"
         },
         404: {
             "description": "Usuario no encontrado"
         }
     }
 )
-def get_user_by_username(username: str, db: Session = Depends(get_db)):
+def get_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    db: Session = Depends(get_db)
+):
     """
-    Endpoint para obtener un usuario específico por su username.
+    GET /users/{user_id}
+    Solo permite obtener tu propio perfil por ID
+    Requiere token JWT válido.
     """
     try:
-        user = obtener_usuario_por_username(db, username=username)
+        # Verificar que el usuario solo pueda ver su propio perfil
+        if user_id != current_user.id:
+            logger.warning(f"🚫 SEGURIDAD: El usuario '{current_user.username}' (ID: {current_user.id}) intentó acceder al perfil del usuario ID: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permisos para ver el perfil de otros usuarios"
+            )
+        
+        service = UserService(db)
+        user = service.obtener_usuario(user_id)
+        
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Usuario con ID {user_id} no encontrado"
+            )
+        
+        # Log detallado con información del usuario
+        logger.info(f"👤 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil por ID")
+        
+        return user
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error al obtener usuario: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
+
+# -------------------------------
+# GET /users/username/{username} → Solo permite buscar tu propio username
+# -------------------------------
+@router.get(
+    "/username/{username}",
+    response_model=UserResponse,
+    summary="Obtener usuario por username (solo tu propio username)",
+    description="""
+    **Obtiene un usuario por nombre de usuario, pero solo si es tu propio username.**
+    
+    ### Seguridad:
+    - Solo puedes buscar tu propio username
+    - Si intentas buscar otro username, recibirás un error 403 Forbidden
+    
+    ### Parámetros:
+    - **username**: Tu propio nombre de usuario
+    """,
+    responses={
+        200: {
+            "description": "Tu perfil encontrado exitosamente"
+        },
+        403: {
+            "description": "No puedes buscar otros usuarios"
+        },
+        404: {
+            "description": "Usuario no encontrado"
+        }
+    }
+)
+def get_user_by_username(
+    username: str,
+    current_user: User = Depends(get_current_user),  # ← Requiere JWT
+    db: Session = Depends(get_db)
+):
+    """
+    GET /users/username/{username}
+    Solo permite buscar tu propio username
+    Requiere token JWT válido.
+    """
+    try:
+        # Verificar que el usuario solo pueda buscar su propio username
+        if username != current_user.username:
+            logger.warning(f"🚫 SEGURIDAD: El usuario '{current_user.username}' (ID: {current_user.id}) intentó buscar al usuario '{username}'")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permisos para buscar otros usuarios"
+            )
+        
+        service = UserService(db)
+        user = service.obtener_usuario_por_username(username)
+        
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Usuario con username '{username}' no encontrado"
             )
+        
+        # Log detallado con información del usuario
+        logger.info(f"🔍 ACCIÓN: El usuario '{current_user.username}' (ID: {current_user.id}) consultó su propio perfil por username")
+        
         return user
+        
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error al obtener usuario por username: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            detail="Error interno del servidor"
         )
 
 
@@ -261,26 +368,37 @@ def get_user_by_username(username: str, db: Session = Depends(get_db)):
         }
     }
 )
-def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
+def create_user(
+    user_data: UserCreate,
+    current_user: User = Depends(can_manage_users),  # ← Solo admins
+    db: Session = Depends(get_db)
+):
     """
-    Endpoint para crear un nuevo usuario.
+    POST /users/
+    Crea un nuevo usuario (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_manage_users.
     """
     try:
-        new_user = crear_usuario(
-            db,
+        service = UserService(db)
+        new_user = service.crear_usuario(
             username=user_data.username,
-            password=user_data.password
+            password=user_data.password,
+            role_id=user_data.role_id
         )
+        
+        logger.info(f"Usuario {current_user.username} creó nuevo usuario: {user_data.username}")
         return new_user
+        
     except ValueError as ve:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(ve)
         )
     except Exception as e:
+        logger.error(f"Error al crear usuario: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            detail="Error interno del servidor"
         )
 
 
@@ -321,19 +439,26 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 def update_user(
     user_id: int,
     user_data: UserUpdate,
+    current_user: User = Depends(can_manage_users),  # ← Solo admins
     db: Session = Depends(get_db)
 ):
     """
-    Endpoint para actualizar un usuario existente.
+    PUT /users/{user_id}
+    Actualiza un usuario existente (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_manage_users.
     """
     try:
-        updated_user = actualizar_usuario(
-            db,
+        service = UserService(db)
+        updated_user = service.actualizar_usuario(
             user_id=user_id,
             username=user_data.username,
-            password=user_data.password
+            password=user_data.password,
+            role_id=user_data.role_id
         )
+        
+        logger.info(f"Usuario {current_user.username} actualizó usuario ID: {user_id}")
         return updated_user
+        
     except ValueError as ve:
         if "no encontrado" in str(ve):
             raise HTTPException(
@@ -345,6 +470,12 @@ def update_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(ve)
             )
+    except Exception as e:
+        logger.error(f"Error al actualizar usuario: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -389,22 +520,35 @@ def update_user(
         }
     }
 )
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(
+    user_id: int,
+    current_user: User = Depends(can_manage_users),  # ← Solo admins
+    db: Session = Depends(get_db)
+):
     """
-    Endpoint para eliminar un usuario.
+    DELETE /users/{user_id}
+    Elimina un usuario (SOLO ADMINISTRADORES)
+    Requiere token JWT válido y permiso can_manage_users.
     """
     try:
-        deleted_user = eliminar_usuario(db, user_id=user_id)
-        return MessageResponse(
-            message=f"Usuario '{deleted_user.username}' eliminado exitosamente"
+        service = UserService(db)
+        deleted_user = service.eliminar_usuario(user_id)
+        
+        logger.info(f"Usuario {current_user.username} eliminó usuario ID: {user_id}")
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": f"Usuario con ID {user_id} eliminado exitosamente"}
         )
+        
     except ValueError as ve:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(ve)
         )
     except Exception as e:
+        logger.error(f"Error al eliminar usuario: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
+            detail="Error interno del servidor"
         )

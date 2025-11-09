@@ -2,17 +2,13 @@
 # - datetime: para manejar fechas y tiempos (ej. created_at).
 # - sqlalchemy: proporciona herramientas para definir modelos de bases de datos mediante ORM.
 #   - Column: define columnas de la tabla.
-#   - String, Float, Date, DateTime: tipos de datos que se pueden usar en columnas.
-#   - PrimaryKeyConstraint: para definir claves primarias si es necesario.
-# - sqlalchemy.orm:
-#   - declarative_base: se usa para crear una clase base de la cual heredan los modelos ORM.
+#   - String, Float, Date, DateTime, Integer: tipos de datos que se pueden usar en columnas.
+# - app.config.NBA_database:
+#   - Base: clase base declarativa de SQLAlchemy de la cual heredan todos los modelos ORM.
 
 from datetime import datetime
 from sqlalchemy import Column, String, Float, Date, DateTime, Integer
-from sqlalchemy.orm import declarative_base
-
-# Base declarativa para que todos los modelos hereden de aquí.
-Base = declarative_base()
+from app.config.NBA_database import Base
 
 
 """

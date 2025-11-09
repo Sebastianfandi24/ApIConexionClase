@@ -1,0 +1,114 @@
+# ================================
+# Docker Compose para desarrollo local
+# ================================
+
+version: '3.8'
+
+services:
+  # ============ Servicio de la API ============
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nba-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Variables de entorno para desarrollo local
+      # IMPORTANTE: En producción (Railway) usar variables de entorno del servicio
+      - PORT=${PORT:-8000}
+      # Usuario de aplicación (no-root)
+      - user=${PGUSER:-appuser}
+      - password=${PGPASSWORD}
+      - host=${host:-db}
+      - db_port=${db_port:-5432}
+      - dbname=${PGDATABASE:-railway}
+      # Variables adicionales Railway
+      - PGUSER=${PGUSER:-appuser}
+      - PGPASSWORD=${PGPASSWORD}
+      - PGDATABASE=${PGDATABASE:-railway}
+      - PGHOST=${host:-db}
+      - PGPORT=${db_port:-5432}
+      - DATABASE_URL=${DATABASE_URL}
+      # JWT
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    volumes:
+      # Montar código para hot-reload en desarrollo
+      - ./app:/app/app
+      # Persistir logs
+      - ./logs:/app/logs
+    depends_on:
+      - db
+    networks:
+      - nba-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============ Base de datos PostgreSQL (solo para desarrollo local) ============
+  db:
+    image: postgres:16-alpine
+    container_name: nba-postgres
+    environment:
+      # Usuario y contraseña del superusuario
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-railway}
+      # Usuario de aplicación (no-root) - Se crea automáticamente
+      APP_USER: ${PGUSER:-appuser}
+      APP_PASSWORD: ${PGPASSWORD:-apppassword}
+      APP_DB: ${PGDATABASE:-railway}
+      # Configuración de datos
+      PGDATA: ${PGDATA:-/var/lib/postgresql/data/pgdata}
+    ports:
+      - "${db_port:-5432}:5432"
+    volumes:
+      # Persistir datos de la base de datos
+      - postgres_data:/var/lib/postgresql/data
+      # Scripts de inicialización para crear usuario no-root
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - nba-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-railway}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============ PgAdmin (opcional - para administración de BD) ============
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: nba-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - nba-network
+    depends_on:
+      - db
+    restart: unless-stopped
+    profiles:
+      - tools
+
+# ============ Volúmenes ============
+volumes:
+  postgres_data:
+    name: nba_postgres_data
+  pgadmin_data:
+    name: nba_pgadmin_data
+
+# ============ Redes ============
+networks:
+  nba-network:
+    name: nba_network
+    driver: bridge
